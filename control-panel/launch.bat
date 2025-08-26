@@ -13,27 +13,42 @@ echo.
 REM Check for Python
 python --version >nul 2>&1
 if %errorLevel% neq 0 (
-    echo Python is not installed or not in PATH.
+    echo [ERROR] Python is not installed or not in PATH.
+    echo.
     echo Please install Python 3.11 or later from https://python.org
+    echo Make sure to check "Add Python to PATH" during installation.
+    echo.
     pause
     exit /b 1
 )
 
 REM Check if virtual environment exists
 if not exist "venv" (
-    echo Creating virtual environment...
-    python -m venv venv
+    echo First time setup detected.
+    echo Please run: setup_first_time.bat
     echo.
+    pause
+    exit /b 1
 )
 
 REM Activate virtual environment
 echo Activating virtual environment...
 call venv\Scripts\activate.bat
 
-REM Install/upgrade requirements
-echo Checking dependencies...
-pip install -q --upgrade pip
-pip install -q -r requirements.txt
+REM Quick check for customtkinter
+python -c "import customtkinter" 2>nul
+if %errorLevel% neq 0 (
+    echo.
+    echo [WARNING] Dependencies not installed properly.
+    echo Installing core dependencies...
+    echo.
+    echo Upgrading pip first...
+    python -m pip install --upgrade pip
+    echo.
+    echo Installing required packages...
+    python -m pip install customtkinter psutil Pillow pystray PyYAML colorlog requests
+    echo.
+)
 
 echo.
 echo Starting IsotoneStack Control Panel...
@@ -47,7 +62,10 @@ if %errorLevel% neq 0 (
     echo.
     echo ============================================
     echo    Application crashed!
-    echo    Check the logs folder for details.
     echo ============================================
+    echo.
+    echo Try running: setup_first_time.bat
+    echo Or use: launch_improved.bat
+    echo.
     pause
 )
