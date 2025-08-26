@@ -61,7 +61,7 @@ git clone https://github.com/yourusername/IsotoneStack.git
 cd IsotoneStack
 
 # Create Python virtual environment for GUI development
-cd control-panel-gui
+cd control-panel
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
@@ -164,7 +164,7 @@ Examples:
 .\tests\Test-Installation.ps1
 
 # Run Python tests
-cd control-panel-gui
+cd control-panel
 pytest tests/
 ```
 
@@ -179,7 +179,7 @@ pytest tests/
 
 1. Update version numbers in:
    - `Install-IsotoneStack.ps1`
-   - `control-panel-gui/main.py`
+   - `control-panel/main.py`
    - `README.md`
 
 2. Update CHANGELOG.md

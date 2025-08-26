@@ -107,7 +107,7 @@ IsotoneStack is a complete, portable WAMP (Windows, Apache, MySQL/MariaDB, PHP) 
 
 4. **Launch the Control Panel GUI**
    ```powershell
-   cd control-panel-gui
+   cd control-panel
    .\launch.bat
    ```
 
@@ -126,8 +126,7 @@ C:\isotone\
 ├── phpmyadmin/       # phpMyAdmin interface
 ├── www/              # Your websites go here
 │   └── default/      # Default website
-├── control-panel/    # PowerShell control scripts
-├── control-panel-gui/# Python GUI application
+├── control-panel/    # Python GUI application
 ├── config/           # Configuration templates
 ├── logs/            # Service logs
 ├── ssl/             # SSL certificates
@@ -150,7 +149,7 @@ C:\isotone\
 The modern control panel provides a beautiful interface for managing your stack:
 
 ```bash
-cd C:\isotone\control-panel-gui
+cd C:\isotone\control-panel
 launch.bat
 ```
 

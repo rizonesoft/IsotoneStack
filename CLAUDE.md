@@ -22,8 +22,7 @@ C:\isotone\
 ├── mariadb/           # MariaDB binaries and data
 ├── phpmyadmin/        # phpMyAdmin web interface
 ├── www/               # User websites (git-ignored)
-├── control-panel/     # PowerShell scripts
-├── control-panel-gui/ # Python GUI application
+├── control-panel/     # Python GUI application
 ├── config/            # Configuration templates
 ├── logs/              # Service logs (git-ignored)
 ├── ssl/               # SSL certificates (git-ignored)
@@ -100,7 +99,7 @@ class ServicePanel:
    }
    ```
 
-2. **Add to control panel** (`control-panel-gui/ui/service_panel.py`):
+2. **Add to control panel** (`control-panel/ui/service_panel.py`):
    ```python
    services_info.append({
        "id": "newservice",
@@ -121,7 +120,7 @@ Place in `/config/` with descriptive names:
 
 ### Adding GUI Features
 
-1. Create component in `/control-panel-gui/ui/`
+1. Create component in `/control-panel/ui/`
 2. Add to sidebar navigation
 3. Register in `main_window.py`
 4. Update `requirements.txt` if new dependencies
@@ -186,7 +185,7 @@ Place in `/config/` with descriptive names:
 "The IsotoneStack installer is failing at [step]. The error message is [error]. The installer should download from official sources and extract to C:\isotone. Check the PowerShell script Install-IsotoneStack.ps1 for the installation logic."
 
 ### For GUI Development
-"I need to add [feature] to the IsotoneStack control panel GUI. It uses Python 3.11+ with CustomTkinter. The main window is in control-panel-gui/ui/main_window.py and should follow the existing dark theme design pattern."
+"I need to add [feature] to the IsotoneStack control panel GUI. It uses Python 3.11+ with CustomTkinter. The main window is in control-panel/ui/main_window.py and should follow the existing dark theme design pattern."
 
 ### For Service Management
 "The [Apache/MariaDB/PHP] service in IsotoneStack won't [start/stop]. Services are named IsotoneApache and IsotoneMariaDB. Check the service control in control-panel/service_panel.py and Windows service commands."

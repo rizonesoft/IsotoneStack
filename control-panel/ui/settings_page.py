@@ -208,7 +208,7 @@ class SettingsPage:
                 "IsotoneStack",
                 0,
                 winreg.REG_SZ,
-                f"{self.config.get_isotone_path()}\\control-panel-gui\\main.py"
+                f"{self.config.get_isotone_path()}\\control-panel\\main.py"
             )
             winreg.CloseKey(key)
         except Exception as e:

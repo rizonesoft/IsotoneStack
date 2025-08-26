@@ -62,7 +62,7 @@ A modern, beautiful control panel for managing IsotoneStack services with Custom
 
 2. **Launch the Control Panel**
    ```batch
-   cd C:\isotone\control-panel-gui
+   cd C:\isotone\control-panel
    launch.bat
    ```
 
@@ -170,7 +170,7 @@ Settings are stored in `config/settings.json`
 ### Project Structure
 
 ```
-control-panel-gui/
+control-panel/
 ├── main.py              # Main application entry
 ├── requirements.txt     # Python dependencies
 ├── launch.bat          # Windows launcher
@@ -215,5 +215,5 @@ Part of IsotoneStack - Free for personal and commercial use.
 ## Support
 
 - Report issues in the IsotoneStack repository
-- Check logs in `control-panel-gui/logs/`
+- Check logs in `control-panel/logs/`
 - Ensure all IsotoneStack services are properly installed

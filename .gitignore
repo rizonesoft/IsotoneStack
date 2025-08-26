@@ -109,19 +109,19 @@ passwords.txt
 # =====================================
 # Python Control Panel
 # =====================================
-/control-panel-gui/venv/
-/control-panel-gui/__pycache__/
-/control-panel-gui/**/__pycache__/
-/control-panel-gui/*.pyc
-/control-panel-gui/**/*.pyc
-/control-panel-gui/.pytest_cache/
-/control-panel-gui/dist/
-/control-panel-gui/build/
-/control-panel-gui/*.egg-info/
-/control-panel-gui/logs/
-/control-panel-gui/config/settings.json
-/control-panel-gui/assets/icons/*.ico
-/control-panel-gui/assets/icons/*.png
+/control-panel/venv/
+/control-panel/__pycache__/
+/control-panel/**/__pycache__/
+/control-panel/*.pyc
+/control-panel/**/*.pyc
+/control-panel/.pytest_cache/
+/control-panel/dist/
+/control-panel/build/
+/control-panel/*.egg-info/
+/control-panel/logs/
+/control-panel/config/settings.json
+/control-panel/assets/icons/*.ico
+/control-panel/assets/icons/*.png
 
 # =====================================
 # PowerShell Control Panel
@@ -193,11 +193,11 @@ setup.log
 !/configs/
 
 # Keep control panel source
-!/control-panel-gui/main.py
-!/control-panel-gui/ui/
-!/control-panel-gui/services/
-!/control-panel-gui/utils/
-!/control-panel-gui/requirements.txt
-!/control-panel-gui/setup.py
-!/control-panel-gui/launch.bat
-!/control-panel-gui/README.md
+!/control-panel/main.py
+!/control-panel/ui/
+!/control-panel/services/
+!/control-panel/utils/
+!/control-panel/requirements.txt
+!/control-panel/setup.py
+!/control-panel/launch.bat
+!/control-panel/README.md
