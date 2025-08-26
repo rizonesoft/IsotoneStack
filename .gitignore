@@ -20,6 +20,16 @@
 *.lock
 
 # =====================================
+# Component directories - Downloaded/extracted files
+# =====================================
+/apache24/
+/mariadb/
+/php/
+/phpmyadmin/
+/bin/
+/downloads/
+
+# =====================================
 # Database data - Created during initialization
 # =====================================
 /mariadb/data/
@@ -34,9 +44,7 @@
 # =====================================
 # Backups - Created by user
 # =====================================
-/backups/*.sql
-/backups/*.zip
-/backups/*.tar.gz
+/backups/
 
 # =====================================
 # User websites - Created by developers
