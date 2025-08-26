@@ -1,0 +1,9 @@
+# Minimal requirements for IsotoneStack Control Panel
+customtkinter==5.2.2
+psutil==5.9.8
+Pillow==10.2.0
+pystray==0.19.5
+PyYAML==6.0.1
+colorlog==6.8.0
+requests==2.31.0
+PyMySQL==1.1.0

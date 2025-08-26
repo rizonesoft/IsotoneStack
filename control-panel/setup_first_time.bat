@@ -78,7 +78,7 @@ REM Upgrade pip, setuptools, and wheel
 echo.
 echo Step 5: Upgrading pip and core packages...
 echo   Upgrading pip to latest version...
-python -m pip install --upgrade pip
+python -m pip install --upgrade pip --no-warn-script-location
 if %errorLevel% equ 0 (
     echo   [OK] pip upgraded successfully
 ) else (
@@ -86,45 +86,79 @@ if %errorLevel% equ 0 (
 )
 
 echo   Upgrading setuptools and wheel...
-python -m pip install --upgrade setuptools wheel --quiet
+python -m pip install --upgrade setuptools wheel --quiet --no-warn-script-location
 echo [OK] Core packages upgraded
 
-REM Create minimal requirements file
+REM Install packages one by one with better error handling
 echo.
-echo Step 6: Creating minimal requirements...
-(
-echo # Minimal requirements for IsotoneStack Control Panel
-echo customtkinter==5.2.2
-echo psutil==5.9.8
-echo Pillow==10.2.0
-echo pystray==0.19.5
-echo PyYAML==6.0.1
-echo colorlog==6.8.0
-echo requests==2.31.0
-echo PyMySQL==1.1.0
-) > requirements_minimal.txt
-
-REM Install packages one by one
-echo.
-echo Step 7: Installing required packages...
+echo Step 6: Installing required packages...
 echo.
 
-set packages=customtkinter psutil Pillow pystray PyYAML colorlog requests PyMySQL
+REM Install customtkinter
+echo   Installing customtkinter...
+python -m pip install customtkinter --no-cache-dir
+if %errorLevel% neq 0 (
+    echo   [RETRY] Attempting alternative installation for customtkinter...
+    python -m pip install customtkinter==5.2.2 --no-deps
+    python -m pip install darkdetect packaging
+)
 
-for %%p in (%packages%) do (
-    echo   Installing %%p...
-    python -m pip install %%p --quiet
-    if !errorLevel! equ 0 (
-        echo   [OK] %%p installed
-    ) else (
-        echo   [WARNING] %%p failed - will retry
-        python -m pip install %%p --no-deps --quiet
-    )
+REM Install psutil
+echo   Installing psutil...
+python -m pip install psutil --no-cache-dir
+if %errorLevel% neq 0 (
+    echo   [WARNING] psutil installation failed - monitoring features will be limited
+)
+
+REM Install Pillow
+echo   Installing Pillow...
+python -m pip install Pillow --no-cache-dir
+if %errorLevel% neq 0 (
+    echo   [RETRY] Attempting alternative installation for Pillow...
+    python -m pip install Pillow==10.2.0 --no-deps
+)
+
+REM Install pystray
+echo   Installing pystray...
+python -m pip install pystray --no-cache-dir
+if %errorLevel% neq 0 (
+    echo   [WARNING] pystray installation failed - system tray feature will be disabled
+)
+
+REM Install PyYAML
+echo   Installing PyYAML...
+python -m pip install PyYAML --no-cache-dir
+if %errorLevel% neq 0 (
+    echo   [RETRY] Attempting alternative installation for PyYAML...
+    python -m pip install PyYAML==6.0.1 --no-deps
+)
+
+REM Install colorlog
+echo   Installing colorlog...
+python -m pip install colorlog --no-cache-dir
+if %errorLevel% neq 0 (
+    echo   [WARNING] colorlog installation failed - using standard logging
+)
+
+REM Install requests
+echo   Installing requests...
+python -m pip install requests --no-cache-dir
+if %errorLevel% neq 0 (
+    echo   [RETRY] Attempting alternative installation for requests...
+    python -m pip install requests==2.31.0 --no-deps
+    python -m pip install urllib3 certifi charset-normalizer idna
+)
+
+REM Install PyMySQL
+echo   Installing PyMySQL...
+python -m pip install PyMySQL --no-cache-dir
+if %errorLevel% neq 0 (
+    echo   [WARNING] PyMySQL installation failed - database features will be limited
 )
 
 REM Optional: Install pywin32 (may fail on some systems)
 echo.
-echo Step 8: Installing optional Windows components...
+echo Step 7: Installing optional Windows components...
 python -m pip install pywin32 --quiet 2>nul
 if %errorLevel% equ 0 (
     echo [OK] Windows components installed
@@ -134,40 +168,33 @@ if %errorLevel% equ 0 (
 
 REM Test imports
 echo.
-echo Step 9: Testing installation...
-python -c "import customtkinter; print('[OK] CustomTkinter imported successfully')" 2>nul
+echo Step 8: Testing installation...
+python -c "import customtkinter; print('  [OK] CustomTkinter imported successfully')" 2>nul
 if %errorLevel% neq 0 (
-    echo [ERROR] CustomTkinter import failed
-    echo Trying alternative installation method...
-    python -m pip install customtkinter --force-reinstall --no-cache-dir
+    echo   [ERROR] CustomTkinter import failed
+    echo   Trying one more time with force reinstall...
+    python -m pip install --force-reinstall customtkinter
 )
 
-python -c "import psutil; print('[OK] PSUtil imported successfully')" 2>nul
+python -c "import psutil; print('  [OK] PSUtil imported successfully')" 2>nul
 if %errorLevel% neq 0 (
-    echo [WARNING] PSUtil import failed - resource monitoring will be limited
+    echo   [WARNING] PSUtil not available
 )
 
-REM Create test script
+python -c "import PIL; print('  [OK] Pillow imported successfully')" 2>nul
+if %errorLevel% neq 0 (
+    echo   [WARNING] Pillow not available
+)
+
+REM Final summary
 echo.
-echo Step 10: Running test...
-(
-echo import sys
-echo print(f"Python: {sys.version}"^)
-echo print(f"Path: {sys.executable}"^)
-echo try:
-echo     import customtkinter
-echo     print("CustomTkinter: OK"^)
-echo except ImportError as e:
-echo     print(f"CustomTkinter: FAILED - {e}"^)
-echo try:
-echo     import psutil
-echo     print("PSUtil: OK"^)
-echo except ImportError as e:
-echo     print(f"PSUtil: FAILED - {e}"^)
-) > test_imports.py
+echo ============================================
+echo    Setup Summary
+echo ============================================
+echo.
 
-python test_imports.py
-del test_imports.py
+REM Check which packages are actually installed
+python -c "import pkg_resources; installed = {pkg.key for pkg in pkg_resources.working_set}; required = {'customtkinter', 'psutil', 'pillow', 'pystray', 'pyyaml', 'colorlog', 'requests', 'pymysql'}; found = required & installed; missing = required - installed; print(f'Installed: {len(found)}/{len(required)} packages'); [print(f'  [OK] {pkg}') for pkg in sorted(found)]; [print(f'  [MISSING] {pkg}') for pkg in sorted(missing)] if missing else None"
 
 echo.
 echo ============================================
@@ -175,11 +202,15 @@ echo    Setup Complete!
 echo ============================================
 echo.
 echo You can now run the control panel using:
-echo   launch.bat (original launcher)
-echo   launch_improved.bat (improved launcher)
+echo   launch.bat
 echo.
 echo Or directly with:
 echo   venv\Scripts\activate
 echo   python main.py
+echo.
+echo If packages failed to install, try:
+echo   1. Run this script as Administrator
+echo   2. Update Python to latest version
+echo   3. Manually install with: pip install packagename
 echo.
 pause

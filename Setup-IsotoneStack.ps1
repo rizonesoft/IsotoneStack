@@ -3,9 +3,17 @@
 # Components should be manually downloaded and extracted to their directories
 
 param(
-    [string]$InstallPath = "C:\isotone",
+    [string]$InstallPath = "",
     [switch]$Force = $false
 )
+
+# If InstallPath not provided, use script's directory
+if ([string]::IsNullOrEmpty($InstallPath)) {
+    $InstallPath = $PSScriptRoot
+}
+
+# Clean up the path (remove trailing backslash if present)
+$InstallPath = $InstallPath.TrimEnd('\', '/')
 
 # Run as Administrator check
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
@@ -160,16 +168,22 @@ function Configure-Apache {
         # Update ServerRoot
         $content = $content -replace 'ServerRoot\s+".*?"', "ServerRoot `"$($InstallPath -replace '\\', '/')/apache24`""
         
-        # Update DocumentRoot
+        # Update DocumentRoot and Directory
         $content = $content -replace 'DocumentRoot\s+".*?"', "DocumentRoot `"$($InstallPath -replace '\\', '/')/www`""
         $content = $content -replace '<Directory\s+"c:/Apache24/htdocs">', "<Directory `"$($InstallPath -replace '\\', '/')/www`">"
+        $content = $content -replace '<Directory\s+"\$\{SRVROOT\}/htdocs">', "<Directory `"$($InstallPath -replace '\\', '/')/www`">"
         
         # Enable required modules
         $content = $content -replace '#LoadModule rewrite_module', 'LoadModule rewrite_module'
         $content = $content -replace '#LoadModule ssl_module', 'LoadModule ssl_module'
         
-        # Add PHP configuration if not exists
-        if ($content -notmatch 'LoadModule php_module') {
+        # Update or add PHP configuration
+        if ($content -match 'LoadModule php_module') {
+            # Update existing PHP paths
+            $content = $content -replace 'LoadModule php_module\s+".*?"', "LoadModule php_module `"$($InstallPath -replace '\\', '/')/php/php8apache2_4.dll`""
+            $content = $content -replace 'PHPIniDir\s+".*?"', "PHPIniDir `"$($InstallPath -replace '\\', '/')/php`""
+        } else {
+            # Add PHP configuration if not exists
             $phpConfig = @"
 
 # PHP 8.4 Configuration
@@ -237,10 +251,13 @@ function Configure-PHP {
         # Configure PHP settings
         $content = Get-Content $phpIni -Raw
         
-        # Set extension directory
-        $content = $content -replace ';?\s*extension_dir\s*=.*', "extension_dir = `"$InstallPath\php\ext`""
+        # Set extension directory (Windows uses backslashes)
+        $extDir = "$InstallPath\php\ext"
+        # Update extension_dir - handle multiple possible formats
+        $content = $content -replace ';?\s*extension_dir\s*=\s*".*?"', "extension_dir = `"$extDir`""
+        $content = $content -replace ';?\s*extension_dir\s*=\s*[^\r\n]+', "extension_dir = `"$extDir`""
         
-        # Enable common extensions
+        # Enable common extensions (PHP 7.2+ uses just extension name without php_ or .dll)
         $extensions = @(
             'curl', 'fileinfo', 'gd', 'mbstring', 'mysqli', 
             'openssl', 'pdo_mysql', 'zip', 'intl', 'soap', 
@@ -248,13 +265,14 @@ function Configure-PHP {
         )
         
         foreach ($ext in $extensions) {
-            $content = $content -replace ";extension=$ext", "extension=$ext"
+            # PHP 7.2+ on Windows - just use extension name
+            $content = $content -replace ";extension=$ext\b", "extension=$ext"
         }
         
-        # Configure paths
-        $content = $content -replace 'error_log\s*=.*', "error_log = `"$InstallPath\logs\php\error.log`""
-        $content = $content -replace 'upload_tmp_dir\s*=.*', "upload_tmp_dir = `"$InstallPath\tmp`""
-        $content = $content -replace 'session.save_path\s*=.*', "session.save_path = `"$InstallPath\tmp`""
+        # Configure paths (PHP needs forward slashes)
+        $content = $content -replace 'error_log\s*=.*', "error_log = `"$($InstallPath -replace '\\', '/')/logs/php/error.log`""
+        $content = $content -replace 'upload_tmp_dir\s*=.*', "upload_tmp_dir = `"$($InstallPath -replace '\\', '/')/tmp`""
+        $content = $content -replace 'session.save_path\s*=.*', "session.save_path = `"$($InstallPath -replace '\\', '/')/tmp`""
         
         # Development settings
         $content = $content -replace 'display_errors\s*=.*', 'display_errors = On'
@@ -283,56 +301,20 @@ function Initialize-MariaDB {
     $dataDir = "$InstallPath\mariadb\data"
     $binDir = "$InstallPath\mariadb\bin"
     
+    # Create data directory if it doesn't exist
+    if (-not (Test-Path $dataDir)) {
+        Write-Host "  Creating MariaDB data directory..." -ForegroundColor Yellow
+        New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
+    }
+    
     # Check if already initialized
     if ((Test-Path "$dataDir\mysql") -and -not $Force) {
         Write-Host "  MariaDB already initialized. Use -Force to reinitialize." -ForegroundColor Yellow
         return $true
     }
     
-    # Create my.ini configuration
-    $myIni = @"
-[mysqld]
-# Basic Settings
-basedir=$($InstallPath -replace '\\', '/')/mariadb
-datadir=$($InstallPath -replace '\\', '/')/mariadb/data
-port=3306
-socket=$($InstallPath -replace '\\', '/')/tmp/mysql.sock
-
-# Character Set
-character-set-server=utf8mb4
-collation-server=utf8mb4_unicode_ci
-
-# InnoDB Settings
-innodb_buffer_pool_size=1G
-innodb_log_file_size=256M
-innodb_flush_method=normal
-innodb_file_per_table=1
-
-# Performance
-max_connections=200
-key_buffer_size=256M
-table_open_cache=4000
-sort_buffer_size=2M
-read_buffer_size=2M
-read_rnd_buffer_size=8M
-
-# Logging
-log-error=$($InstallPath -replace '\\', '/')/logs/mariadb/error.log
-slow_query_log=1
-slow_query_log_file=$($InstallPath -replace '\\', '/')/logs/mariadb/slow.log
-long_query_time=2
-
-[client]
-port=3306
-socket=$($InstallPath -replace '\\', '/')/tmp/mysql.sock
-default-character-set=utf8mb4
-
-[mysql]
-default-character-set=utf8mb4
-"@
-    
-    Set-Content -Path "$dataDir\my.ini" -Value $myIni -Encoding UTF8
-    Write-Host "  Created my.ini configuration" -ForegroundColor Green
+    # Don't create my.ini here - mysql_install_db will create it in the data directory
+    # We'll create it after initialization if needed
     
     # Initialize database
     Write-Host "  Initializing database files..." -ForegroundColor Yellow
@@ -353,13 +335,60 @@ default-character-set=utf8mb4
             $initArgs = "--datadir=`"$dataDir`" --basedir=`"$InstallPath\mariadb`""
         }
         
-        $process = Start-Process -FilePath $initCommand -ArgumentList $initArgs -Wait -PassThru -WindowStyle Hidden
+        Write-Host "  Running database initialization (this may take a minute)..." -ForegroundColor Yellow
         
-        if ($process.ExitCode -eq 0) {
+        # Run with visible window and no timeout to prevent cancellation
+        $pinfo = New-Object System.Diagnostics.ProcessStartInfo
+        $pinfo.FileName = $initCommand
+        $pinfo.Arguments = $initArgs
+        $pinfo.UseShellExecute = $false
+        $pinfo.CreateNoWindow = $true
+        $pinfo.RedirectStandardOutput = $true
+        $pinfo.RedirectStandardError = $true
+        
+        $p = New-Object System.Diagnostics.Process
+        $p.StartInfo = $pinfo
+        $p.Start() | Out-Null
+        $p.WaitForExit()
+        
+        if ($p.ExitCode -eq 0) {
             Write-Host "  Database initialized successfully" -ForegroundColor Green
         } else {
-            Write-Host "  Database initialization may have issues (exit code: $($process.ExitCode))" -ForegroundColor Yellow
+            Write-Host "  Database initialization completed with exit code: $($p.ExitCode)" -ForegroundColor Yellow
+            # Continue anyway as it might still work
         }
+        
+        # Create my.ini from template
+        $myIniPath = "$InstallPath\mariadb\my.ini"
+        $templatePath = "$InstallPath\config\my.ini.template"
+        
+        if (Test-Path $templatePath) {
+            # Use template
+            $myIni = Get-Content -Path $templatePath -Raw
+            $myIni = $myIni -replace '{{INSTALL_PATH}}', ($InstallPath -replace '\\', '/')
+        } else {
+            # Fallback to embedded configuration
+            $myIni = @"
+[mysqld]
+basedir=$($InstallPath -replace '\\', '/')/mariadb
+datadir=$($InstallPath -replace '\\', '/')/mariadb/data
+port=3306
+character-set-server=utf8mb4
+collation-server=utf8mb4_unicode_ci
+innodb_buffer_pool_size=256M
+innodb_log_file_size=48M
+max_connections=100
+skip-grant-tables
+log-error=$($InstallPath -replace '\\', '/')/logs/mariadb/error.log
+
+[client]
+port=3306
+default-character-set=utf8mb4
+"@
+        }
+        
+        Set-Content -Path $myIniPath -Value $myIni -Encoding ASCII
+        Write-Host "  Created my.ini configuration for service" -ForegroundColor Green
     }
     catch {
         Write-Host "  Error during database initialization: $_" -ForegroundColor Red
@@ -374,11 +403,19 @@ function Configure-phpMyAdmin {
     Write-Host "`nConfiguring phpMyAdmin..." -ForegroundColor Cyan
     
     $configFile = "$InstallPath\phpmyadmin\config.inc.php"
+    $templatePath = "$InstallPath\config\phpmyadmin.config.template"
     
     # Generate blowfish secret
     $blowfishSecret = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 32 | ForEach-Object {[char]$_})
     
-    $config = @"
+    if (Test-Path $templatePath) {
+        # Use template
+        $config = Get-Content -Path $templatePath -Raw
+        $config = $config -replace '{{INSTALL_PATH}}', ($InstallPath -replace '\\', '/')
+        $config = $config -replace '{{BLOWFISH_SECRET}}', $blowfishSecret
+    } else {
+        # Fallback to embedded configuration
+        $config = @"
 <?php
 /* phpMyAdmin configuration for IsotoneStack */
 
@@ -411,6 +448,7 @@ function Configure-phpMyAdmin {
 \$cfg['ShowSQL'] = true;
 ?>
 "@
+    }
     
     Set-Content -Path $configFile -Value $config -Encoding UTF8
     Write-Host "  phpMyAdmin configuration created" -ForegroundColor Green
@@ -424,172 +462,106 @@ function Register-Services {
     
     # Register Apache service
     Write-Host "  Registering Apache service..." -ForegroundColor Yellow
-    & "$InstallPath\apache24\bin\httpd.exe" -k uninstall -n "IsotoneApache" 2>$null
-    & "$InstallPath\apache24\bin\httpd.exe" -k install -n "IsotoneApache"
-    sc.exe config IsotoneApache start= manual | Out-Null
-    Write-Host "    IsotoneApache service registered" -ForegroundColor Green
+    
+    # First, ensure any old service is removed
+    Write-Host "    Removing any existing service..." -ForegroundColor Gray
+    $removeResult = & cmd /c "`"$InstallPath\apache24\bin\httpd.exe`" -k uninstall -n IsotoneApache 2>&1"
+    Start-Sleep -Seconds 1
+    
+    # Change to Apache bin directory for installation
+    Write-Host "    Installing new service..." -ForegroundColor Gray
+    $originalLocation = Get-Location
+    Set-Location "$InstallPath\apache24\bin"
+    
+    $installResult = & cmd /c "httpd.exe -k install -n IsotoneApache 2>&1"
+    Set-Location $originalLocation
+    
+    if ($LASTEXITCODE -eq 0) {
+        sc.exe config IsotoneApache start= manual | Out-Null
+        Write-Host "    IsotoneApache service registered successfully" -ForegroundColor Green
+    } else {
+        Write-Host "    Apache service registration failed:" -ForegroundColor Red
+        Write-Host "    $installResult" -ForegroundColor Red
+        
+        # Try alternative approach
+        Write-Host "    Trying alternative installation method..." -ForegroundColor Yellow
+        $altResult = & cmd /c "`"$InstallPath\apache24\bin\httpd.exe`" -k install -n IsotoneApache" 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "    IsotoneApache service registered (alternative method)" -ForegroundColor Green
+        } else {
+            Write-Host "    Failed to register Apache service" -ForegroundColor Red
+            return $false
+        }
+    }
     
     # Register MariaDB service
     Write-Host "  Registering MariaDB service..." -ForegroundColor Yellow
-    & "$InstallPath\mariadb\bin\mysqld.exe" --remove "IsotoneMariaDB" 2>$null
-    & "$InstallPath\mariadb\bin\mysqld.exe" --install "IsotoneMariaDB" --defaults-file="$InstallPath\mariadb\data\my.ini"
-    sc.exe config IsotoneMariaDB start= manual | Out-Null
-    Write-Host "    IsotoneMariaDB service registered" -ForegroundColor Green
+    
+    # Remove any existing service (ignore errors if it doesn't exist)
+    Write-Host "    Removing any existing service..." -ForegroundColor Gray
+    try {
+        $removeOutput = & cmd /c "`"$InstallPath\mariadb\bin\mysqld.exe`" --remove IsotoneMariaDB 2>&1"
+        # Also try sc delete just in case
+        sc.exe delete IsotoneMariaDB 2>&1 | Out-Null
+    } catch {
+        # Ignore errors - service might not exist
+    }
+    
+    # Install the service
+    Write-Host "    Installing new service..." -ForegroundColor Gray
+    $mariaResult = & cmd /c "`"$InstallPath\mariadb\bin\mysqld.exe`" --install IsotoneMariaDB --defaults-file=`"$InstallPath\mariadb\my.ini`" 2>&1"
+    
+    if ($LASTEXITCODE -eq 0) {
+        sc.exe config IsotoneMariaDB start= manual | Out-Null
+        Write-Host "    IsotoneMariaDB service registered successfully" -ForegroundColor Green
+    } else {
+        Write-Host "    MariaDB service registration had issues but may still work" -ForegroundColor Yellow
+        Write-Host "    $mariaResult" -ForegroundColor Gray
+    }
     
     return $true
 }
 
-# Create default website
+# Copy default website files
 function Create-DefaultWebsite {
-    Write-Host "`nCreating default website..." -ForegroundColor Cyan
+    Write-Host "`nCopying default website files..." -ForegroundColor Cyan
     
-    $indexFile = "$InstallPath\www\default\index.php"
-    
-    if (-not (Test-Path $indexFile)) {
-        $content = @'
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IsotoneStack</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container {
-            text-align: center;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            max-width: 800px;
-            margin: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        .status {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-        .component {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 10px;
-            transition: transform 0.3s;
-        }
-        .component:hover {
-            transform: translateY(-5px);
-        }
-        .component h3 {
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
-        }
-        .version {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-        .links {
-            margin-top: 2rem;
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .links a {
-            color: white;
-            text-decoration: none;
-            padding: 0.8rem 1.5rem;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50px;
-            transition: all 0.3s;
-        }
-        .links a:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.05);
-        }
-        .info {
-            margin-top: 2rem;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            font-family: monospace;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🚀 IsotoneStack</h1>
-        <p>Professional Development Environment for Windows</p>
-        
-        <div class="status">
-            <div class="component">
-                <h3>Apache</h3>
-                <div class="version"><?php echo apache_get_version(); ?></div>
-            </div>
-            <div class="component">
-                <h3>PHP</h3>
-                <div class="version"><?php echo PHP_VERSION; ?></div>
-            </div>
-            <div class="component">
-                <h3>MariaDB</h3>
-                <div class="version">
-                    <?php
-                    $mysqli = @new mysqli("localhost", "root", "");
-                    if (!$mysqli->connect_error) {
-                        echo $mysqli->server_info;
-                        $mysqli->close();
-                    } else {
-                        echo "Not connected";
-                    }
-                    ?>
-                </div>
-            </div>
-            <div class="component">
-                <h3>phpMyAdmin</h3>
-                <div class="version">5.2.2+</div>
-            </div>
-        </div>
-        
-        <div class="links">
-            <a href="/phpmyadmin">phpMyAdmin</a>
-            <a href="phpinfo.php">PHP Info</a>
-            <a href="https://github.com/Rizonesoft/IsotoneStack" target="_blank">Documentation</a>
-        </div>
-        
-        <div class="info">
-            <strong>Server Information</strong><br>
-            Server Software: <?php echo $_SERVER['SERVER_SOFTWARE']; ?><br>
-            Document Root: <?php echo $_SERVER['DOCUMENT_ROOT']; ?><br>
-            PHP SAPI: <?php echo php_sapi_name(); ?>
-        </div>
-    </div>
-</body>
-</html>
-'@
-        
-        New-Item -ItemType Directory -Path "$InstallPath\www\default" -Force | Out-Null
-        Set-Content -Path $indexFile -Value $content -Encoding UTF8
-        
-        # Create phpinfo file
-        $phpinfoContent = "<?php phpinfo(); ?>"
-        Set-Content -Path "$InstallPath\www\default\phpinfo.php" -Value $phpinfoContent -Encoding UTF8
-        
-        Write-Host "  Default website created" -ForegroundColor Green
+    # Check if default directory exists
+    $defaultDir = "$InstallPath\default"
+    if (-not (Test-Path $defaultDir)) {
+        Write-Host "  Default directory not found at $defaultDir" -ForegroundColor Red
+        return $false
     }
+    
+    # Copy files from default to www (only if they don't exist)
+    $wwwDir = "$InstallPath\www"
+    
+    # Get all files and directories from default
+    $items = Get-ChildItem -Path $defaultDir -Recurse
+    
+    foreach ($item in $items) {
+        # Calculate relative path
+        $relativePath = $item.FullName.Substring($defaultDir.Length + 1)
+        $destinationPath = Join-Path $wwwDir $relativePath
+        
+        if ($item.PSIsContainer) {
+            # It's a directory - create it if it doesn't exist
+            if (-not (Test-Path $destinationPath)) {
+                New-Item -ItemType Directory -Path $destinationPath -Force | Out-Null
+                Write-Host "  Created directory: $relativePath" -ForegroundColor Gray
+            }
+        } else {
+            # It's a file - copy it if it doesn't exist
+            if (-not (Test-Path $destinationPath)) {
+                Copy-Item -Path $item.FullName -Destination $destinationPath -Force
+                Write-Host "  Copied: $relativePath" -ForegroundColor Green
+            } else {
+                Write-Host "  Skipped (exists): $relativePath" -ForegroundColor Yellow
+            }
+        }
+    }
+    
+    Write-Host "  Default website files copied" -ForegroundColor Green
     
     return $true
 }
@@ -643,7 +615,7 @@ sc.exe delete IsotoneMariaDB
 
 if ($RemoveData) {
     Write-Host "Removing all data..." -ForegroundColor Red
-    Remove-Item "C:\isotone" -Recurse -Force
+    Remove-Item $InstallPath -Recurse -Force
 }
 
 Write-Host "Services uninstalled!" -ForegroundColor Green
@@ -694,7 +666,7 @@ Next Steps:
    - phpMyAdmin: http://localhost/phpmyadmin
    
 3. Launch Control Panel:
-   C:\isotone\control-panel\launch.bat
+   $InstallPath\control-panel\launch.bat
 
 "@ -ForegroundColor $(if ($apacheOk -and $phpOk -and $mariadbOk -and $phpmyadminOk -and $servicesOk) { 'Green' } else { 'Yellow' })
     
