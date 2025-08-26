@@ -3,7 +3,7 @@ Sidebar navigation component with animated buttons
 """
 
 import customtkinter as ctk
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
 import tkinter as tk
 
 class Sidebar:
