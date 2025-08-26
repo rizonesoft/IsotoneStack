@@ -1,5 +1,5 @@
 @echo off
-REM IsotoneStack Control Panel GUI Launcher
+REM IsotoneStack Control Panel Launcher
 
 title IsotoneStack Control Panel
 color 0A
@@ -43,14 +43,12 @@ if %errorLevel% neq 0 (
     echo Installing core dependencies...
     echo.
     echo Upgrading pip first...
-    python -m pip install --upgrade pip
-    echo.
+    python -m pip install --upgrade pip --quiet
     echo Installing required packages...
-    python -m pip install customtkinter psutil Pillow pystray PyYAML colorlog requests
+    python -m pip install customtkinter psutil Pillow pystray PyYAML colorlog requests --quiet
     echo.
 )
 
-echo.
 echo Starting IsotoneStack Control Panel...
 echo.
 
@@ -65,7 +63,6 @@ if %errorLevel% neq 0 (
     echo ============================================
     echo.
     echo Try running: setup_first_time.bat
-    echo Or use: launch_improved.bat
     echo.
     pause
 )

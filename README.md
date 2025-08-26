@@ -1,152 +1,151 @@
 # IsotoneStack - Portable Windows Development Environment
 
-A complete, portable WAMP (Windows, Apache, MySQL/MariaDB, PHP) stack that installs to `C:\isotone` with the latest stable versions of all components.
+A complete, portable WAMP (Windows, Apache, MySQL/MariaDB, PHP) stack distributed as a pre-bundled package with the latest stable versions of all components.
 
-## Components
+## 📦 Distribution Model
 
-- **Apache** 2.4.62 (Latest stable)
-- **PHP** 8.3.15 (Latest 8.3.x stable)
-- **MariaDB** 11.4.4 (Latest LTS)
-- **phpMyAdmin** 5.2.1 (Latest stable)
+IsotoneStack follows the XAMPP distribution model:
+- **Pre-bundled components** - All binaries included in the download
+- **No internet required** - Works completely offline after download
+- **Portable installation** - Can be moved between systems
+- **Zero configuration** - Works out of the box
 
-## Features
+## 🚀 Components
 
-- ✅ Completely portable installation
-- ✅ No registry dependencies
-- ✅ Automatic service installation
-- ✅ Pre-configured for optimal performance
-- ✅ Interactive control panel
-- ✅ Latest stable versions
+- **Apache** 2.4.65 (Latest stable)
+- **PHP** 8.4.11 (Latest stable)
+- **MariaDB** 12.0.2 (Latest stable)
+- **phpMyAdmin** 5.2.2 (Latest stable)
+- **Control Panel** - Modern Python/CustomTkinter GUI
+
+## ✨ Features
+
+- ✅ Complete portable package (no separate downloads)
+- ✅ Modern GUI control panel
 - ✅ Windows service integration
-- ✅ Automatic VC++ Runtime detection
+- ✅ No registry dependencies
+- ✅ Pre-configured for optimal performance
+- ✅ Virtual hosts manager
+- ✅ Database management interface
+- ✅ System tray integration
+- ✅ Dark/light theme support
 
-## Quick Start
+## 📥 Installation
 
-### Installation
+### Download Package
+1. Download the complete IsotoneStack package (includes all components)
+2. Extract to `C:\isotone`
 
-1. **Run PowerShell as Administrator**
+### Manual Component Setup (for developers)
+If you're building from source or updating components:
 
-2. **Navigate to the isotone directory:**
+1. **Download components manually:**
+   - Apache 2.4.65+ from [apachelounge.com](https://www.apachelounge.com/download/)
+   - PHP 8.4.11+ from [windows.php.net](https://windows.php.net/download/)
+   - MariaDB 12.0.2+ from [mariadb.org](https://mariadb.org/download/)
+   - phpMyAdmin 5.2.2+ from [phpmyadmin.net](https://www.phpmyadmin.net/downloads/)
+
+2. **Extract to correct directories:**
+   ```
+   C:\isotone\apache24\    ← Apache files
+   C:\isotone\php\         ← PHP files
+   C:\isotone\mariadb\     ← MariaDB files
+   C:\isotone\phpmyadmin\  ← phpMyAdmin files
+   ```
+
+3. **Run setup script:**
    ```powershell
    cd C:\isotone
+   .\Setup-IsotoneStack.ps1
    ```
 
-3. **Run the installation script:**
-   ```powershell
-   .\Install-IsotoneStack.ps1
-   ```
+## 🎮 Control Panel
 
-4. **Start the services:**
-   ```powershell
-   .\control-panel\start.ps1
-   ```
-
-### Access Points
-
-- **Web Server:** http://localhost
-- **phpMyAdmin:** http://localhost/phpmyadmin
-- **Database:** localhost:3306
-  - Default user: `root`
-  - Default password: `isotone_admin`
-
-## Directory Structure
-
-```
-C:\isotone\
-├── apache24/          # Apache installation
-├── php/              # PHP installation
-├── mariadb/          # MariaDB installation
-├── phpmyadmin/       # phpMyAdmin installation
-├── control-panel/    # Management scripts
-├── logs/            # Log files for all services
-├── tmp/             # Temporary files
-├── ssl/             # SSL certificates
-├── backups/         # Backup directory
-├── config/          # Configuration templates
-└── www/             # Website files
-    └── default/     # Default website
-```
-
-## Control Panel Scripts
-
-All management scripts are located in `C:\isotone\control-panel\`:
-
-### Basic Commands
-
-```powershell
-# Start all services
-.\start.ps1
-
-# Stop all services
-.\stop.ps1
-
-# Restart all services
-.\restart.ps1
-
-# Check service status
-.\status.ps1
-
-# Uninstall services (preserves files)
-.\uninstall.ps1
-
-# Complete uninstall (removes all files)
-.\uninstall.ps1 -RemoveData
-```
-
-### Interactive Manager
-
-Launch the interactive control panel:
-
-```powershell
-.\IsotoneStack-Manager.ps1
+### GUI Control Panel (Recommended)
+```batch
+C:\isotone\control-panel\launch.bat
 ```
 
 Features:
 - Service management (start/stop/restart)
+- Virtual hosts configuration
+- Database management
+- Port configuration
 - Log viewer
-- Configuration editor
-- Installation testing
-- System information
-- Visual status display
+- Settings management
 
-## Configuration Files
+### PowerShell Scripts
+Located in `C:\isotone\`:
 
-### Apache
-- Main config: `C:\isotone\apache24\conf\httpd.conf`
-- Template: `C:\isotone\config\httpd-isotone.conf`
+```powershell
+# Configure and register services (run once)
+.\Setup-IsotoneStack.ps1
 
-### PHP
-- Main config: `C:\isotone\php\php.ini`
-- Template: `C:\isotone\config\php-isotone.ini`
+# Start all services
+.\Start-Services.ps1
 
-### MariaDB
-- Main config: `C:\isotone\mariadb\my.ini`
-- Template: `C:\isotone\config\my-isotone.ini`
+# Stop all services
+.\Stop-Services.ps1
 
-### phpMyAdmin
-- Main config: `C:\isotone\phpmyadmin\config.inc.php`
+# Check service status
+.\Check-Status.ps1
 
-## Default Settings
+# Uninstall services (preserves files)
+.\Uninstall-Services.ps1
+```
 
-### PHP Extensions Enabled
-- curl, fileinfo, gd, mbstring, mysqli, openssl, pdo_mysql, zip, and more
+## 📁 Directory Structure
 
-### MariaDB Settings
-- InnoDB buffer pool: 1GB
-- Max connections: 200
-- Character set: utf8mb4
+```
+C:\isotone\
+├── apache24/          # Apache 2.4.65+ binaries
+├── php/               # PHP 8.4.11+ binaries
+├── mariadb/           # MariaDB 12.0.2+ binaries
+├── phpmyadmin/        # phpMyAdmin 5.2.2+ web app
+├── runtime/           # VC++ Runtime installer (included)
+│   └── vc_redist.x64.exe
+├── control-panel/     # Python GUI application
+│   ├── main.py        # Main application entry
+│   ├── ui/            # UI components
+│   └── services/      # Service management
+├── www/               # Your websites go here
+│   └── default/       # Default website
+├── logs/              # Centralized logs
+├── config/            # Configuration templates
+├── ssl/               # SSL certificates
+├── tmp/               # Temporary files
+└── backups/           # Database backups
+```
 
-### Apache Modules
-- mod_rewrite enabled
-- mod_ssl available
-- PHP module configured
+## 🌐 Access Points
 
-## Troubleshooting
+- **Web Server:** http://localhost
+- **phpMyAdmin:** http://localhost/phpmyadmin
+- **MariaDB:** localhost:3306
+  - Default user: `root`
+  - Default password: *(set during setup)*
+
+## ⚙️ Configuration
+
+### Service Ports
+- Apache: 80, 443 (SSL)
+- MariaDB: 3306
+- PHP: Via Apache module
+
+### Configuration Files
+- Apache: `C:\isotone\apache24\conf\httpd.conf`
+- PHP: `C:\isotone\php\php.ini`
+- MariaDB: `C:\isotone\mariadb\data\my.ini`
+- phpMyAdmin: `C:\isotone\phpmyadmin\config.inc.php`
+
+## 🛠️ Troubleshooting
 
 ### Services Won't Start
 
-1. **Check if running as Administrator:**
-   - Right-click PowerShell → Run as Administrator
+1. **Check Administrator privileges:**
+   ```powershell
+   # Run PowerShell as Administrator
+   ```
 
 2. **Check port conflicts:**
    ```powershell
@@ -155,133 +154,97 @@ Features:
    ```
 
 3. **Check Visual C++ Runtime:**
-   - The installer automatically downloads if needed
-   - Manual download: https://aka.ms/vs/17/release/vc_redist.x64.exe
+   - Included in `runtime\vc_redist.x64.exe`
+   - Auto-installed by Setup script
+   - Manual install: Run `runtime\vc_redist.x64.exe`
 
 ### View Logs
 
 ```powershell
-# Apache error log
+# Apache errors
 Get-Content C:\isotone\logs\apache\error.log -Tail 20
 
-# PHP error log
+# PHP errors
 Get-Content C:\isotone\logs\php\error.log -Tail 20
 
-# MariaDB error log
+# MariaDB errors
 Get-Content C:\isotone\logs\mariadb\error.log -Tail 20
 ```
 
-### Reset MariaDB Password
+## 🔧 Advanced Usage
 
-```powershell
-# Stop MariaDB
-.\control-panel\stop.ps1
+### Virtual Hosts
 
-# Start MariaDB in safe mode
-C:\isotone\mariadb\bin\mysqld.exe --skip-grant-tables
-
-# In another PowerShell window
-C:\isotone\mariadb\bin\mysql.exe -u root
-```
-
-Then run:
-```sql
-UPDATE mysql.user SET Password=PASSWORD('new_password') WHERE User='root';
-FLUSH PRIVILEGES;
-EXIT;
-```
-
-## Advanced Usage
-
-### Adding Virtual Hosts
-
-Edit `C:\isotone\apache24\conf\extra\httpd-vhosts.conf`:
+1. Use the Control Panel's Virtual Hosts Manager, or
+2. Edit `C:\isotone\apache24\conf\extra\httpd-vhosts.conf`:
 
 ```apache
 <VirtualHost *:80>
-    ServerName mysite.local
-    DocumentRoot "C:/isotone/www/mysite"
-    <Directory "C:/isotone/www/mysite">
+    ServerName myproject.local
+    DocumentRoot "C:/isotone/www/myproject"
+    <Directory "C:/isotone/www/myproject">
         AllowOverride All
         Require all granted
     </Directory>
 </VirtualHost>
 ```
 
-Add to `C:\Windows\System32\drivers\etc\hosts`:
+3. Add to `C:\Windows\System32\drivers\etc\hosts`:
 ```
-127.0.0.1 mysite.local
+127.0.0.1 myproject.local
 ```
 
-### Custom PHP Configuration
+### PHP Configuration
 
-Create a `.user.ini` file in your web directory:
+Create `.user.ini` in your project:
 ```ini
 memory_limit = 1024M
 max_execution_time = 600
 upload_max_filesize = 256M
+post_max_size = 256M
 ```
 
-### SSL Configuration
+### SSL Setup
 
 1. Generate certificates in `C:\isotone\ssl\`
-2. Uncomment in `httpd.conf`:
-   ```apache
-   Include conf/extra/httpd-ssl.conf
-   ```
-3. Restart Apache
+2. Enable SSL in Apache configuration
+3. Restart Apache service
 
-## Installation Options
+## 📊 System Requirements
 
-```powershell
-# Custom installation path
-.\Install-IsotoneStack.ps1 -InstallPath "D:\DevStack"
+- **OS:** Windows 10/11 (64-bit)
+- **RAM:** 2GB minimum, 4GB+ recommended
+- **Disk:** 2GB for installation
+- **Runtime:** Visual C++ 2019-2022 Redistributable (included in `runtime` folder)
 
-# Skip VC++ Runtime check
-.\Install-IsotoneStack.ps1 -SkipVCRedist
+## 🔒 Security Notes
 
-# Force reinstall (overwrites existing)
-.\Install-IsotoneStack.ps1 -Force
-```
-
-## Updates
-
-To update components:
-
-1. Stop all services
-2. Backup your data and configurations
-3. Run installation with `-Force` flag:
-   ```powershell
-   .\Install-IsotoneStack.ps1 -Force
-   ```
-
-## Security Notes
-
-⚠️ **Default installation is configured for development use only!**
+⚠️ **Default configuration is for development only!**
 
 For production:
-1. Change default database passwords
-2. Restrict Apache access
-3. Disable PHP error display
-4. Configure firewall rules
-5. Enable SSL/TLS
-6. Review and harden all configurations
+1. Change all default passwords
+2. Restrict service access
+3. Enable firewall rules
+4. Configure SSL/TLS
+5. Disable debug modes
+6. Review security settings
 
-## Support
+## 📝 License
 
-- Check service status: `.\control-panel\status.ps1`
-- Test installation: Run option 6 in the Manager
-- View system info: Run option 7 in the Manager
-- All logs are in: `C:\isotone\logs\`
-
-## License
-
-This stack installer is provided as-is for development purposes. Individual components are subject to their respective licenses:
+IsotoneStack distribution is open source. Individual components are subject to their respective licenses:
 - Apache: Apache License 2.0
-- PHP: PHP License
+- PHP: PHP License 3.01
 - MariaDB: GPL v2
 - phpMyAdmin: GPL v2
 
+## 🆘 Support
+
+- **Documentation:** See `/docs` directory
+- **Issues:** Report on GitHub
+- **Logs:** Check `C:\isotone\logs\`
+- **Status:** Run Control Panel or `.\Check-Status.ps1`
+
 ---
 
-**IsotoneStack** - Simplifying Windows Development Environments
+**IsotoneStack** - Professional Development Environment for Windows
+Version 1.0 | Built with the latest stable components

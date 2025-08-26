@@ -1,203 +1,78 @@
 # IsotoneStack .gitignore
-# Excludes binaries, runtime files, and user data while keeping source and configs
+# Only ignore runtime files created after installation
 
 # =====================================
-# Apache24 - Exclude binaries, keep configs
+# Logs - Created during runtime
 # =====================================
-/apache24/bin/*.exe
-/apache24/bin/*.dll
-/apache24/modules/*.so
-/apache24/modules/*.dll
-/apache24/lib/
-/apache24/include/
-/apache24/icons/
-/apache24/error/
-/apache24/manual/
-/apache24/cgi-bin/
-# Keep configuration templates
-!/apache24/conf/
-/apache24/conf/*.default
-/apache24/conf/original/
-# Exclude logs
-/apache24/logs/
-
-# =====================================
-# PHP - Exclude binaries, keep configs
-# =====================================
-/php/*.exe
-/php/*.dll
-/php/ext/*.dll
-/php/lib/
-/php/include/
-/php/sasl2/
-/php/sdk/
-/php/extras/
-/php/dev/
-# Keep PHP configuration
-!/php/php.ini
-!/php/php.ini-development
-!/php/php.ini-production
-
-# =====================================
-# MariaDB - Exclude binaries and data
-# =====================================
-/mariadb/bin/*.exe
-/mariadb/bin/*.dll
-/mariadb/lib/
-/mariadb/include/
-/mariadb/share/
-/mariadb/scripts/
-/mariadb/mysql-test/
-# IMPORTANT: Exclude database data
-/mariadb/data/
-
-# =====================================
-# phpMyAdmin - Exclude downloaded files
-# =====================================
-/phpmyadmin/*
-# Keep configuration if customized
-!/phpmyadmin/config.inc.php
-
-# =====================================
-# User Content - COMPLETELY EXCLUDED
-# =====================================
-/www/
-!www/default/index.php
-!www/default/info.php
-
-# =====================================
-# Runtime and temporary files
-# =====================================
-/logs/
-/tmp/
-/temp/
-/cache/
-/sessions/
 *.log
+/logs/**/*.log
+/control-panel/logs/*.log
+
+# =====================================
+# Temporary files - Created during runtime
+# =====================================
+/tmp/*
+/temp/*
+*.tmp
+*.temp
+*.cache
 *.pid
 *.lock
 
 # =====================================
-# Security - Exclude sensitive files
+# Database data - Created during initialization
 # =====================================
-/ssl/
-/certs/
-/keys/
-*.key
-*.crt
-*.pem
-*.pfx
-.env
-.env.*
-secrets.json
-passwords.txt
+/mariadb/data/
 
 # =====================================
-# Backups and dumps
+# SSL certificates - Created by user
 # =====================================
-/backups/
-*.sql
-*.dump
-*.tar
-*.tar.gz
-*.zip
-*.7z
-*.rar
-*.bak
-*.backup
+/ssl/*.key
+/ssl/*.crt
+/ssl/*.pem
 
 # =====================================
-# Python Control Panel
+# Backups - Created by user
+# =====================================
+/backups/*.sql
+/backups/*.zip
+/backups/*.tar.gz
+
+# =====================================
+# User websites - Created by developers
+# =====================================
+/www/*
+!/www/default/
+
+# =====================================
+# Python virtual environment - Created during setup
 # =====================================
 /control-panel/venv/
 /control-panel/__pycache__/
 /control-panel/**/__pycache__/
-/control-panel/*.pyc
-/control-panel/**/*.pyc
-/control-panel/.pytest_cache/
-/control-panel/dist/
-/control-panel/build/
-/control-panel/*.egg-info/
-/control-panel/logs/
+*.pyc
+
+# =====================================
+# User configuration - Created after setup
+# =====================================
 /control-panel/config/settings.json
-/control-panel/assets/icons/*.ico
-/control-panel/assets/icons/*.png
+/control-panel/config/user_settings.json
 
 # =====================================
-# PowerShell Control Panel
-# =====================================
-/control-panel/*.log
-
-# =====================================
-# IDE and Editor files
+# IDE files - Created by editors
 # =====================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-.DS_Store
+
+# =====================================
+# OS files - Created by Windows
+# =====================================
 Thumbs.db
 desktop.ini
+.DS_Store
 
-# =====================================
-# Windows specific
-# =====================================
-$RECYCLE.BIN/
-System Volume Information/
-pagefile.sys
-hiberfil.sys
-
-# =====================================
-# Downloads folder (installation cache)
-# =====================================
-/downloads/
-
-# =====================================
-# Installation state files
-# =====================================
-.installed
-.configured
-install.lock
-setup.log
-
-# =====================================
-# Git files to exclude
-# =====================================
-*.orig
-*.rej
-*.bak
-
-# =====================================
-# Keep these important files
-# =====================================
+# Keep the .gitignore file
 !.gitignore
-!.gitattributes
-!README.md
-!CLAUDE.md
-!LICENSE
-!requirements.txt
-!install.ps1
-!Install-IsotoneStack.ps1
-
-# Keep all batch files
-!*.bat
-
-# Keep PowerShell scripts
-!/scripts/*.ps1
-!/control-panel/*.ps1
-
-# Keep configuration templates
-!/config/*.conf
-!/config/*.ini
-!/configs/
-
-# Keep control panel source
-!/control-panel/main.py
-!/control-panel/ui/
-!/control-panel/services/
-!/control-panel/utils/
-!/control-panel/requirements.txt
-!/control-panel/setup.py
-!/control-panel/launch.bat
-!/control-panel/README.md

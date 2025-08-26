@@ -98,13 +98,24 @@ class Dashboard:
         frame = ctk.CTkFrame(parent, corner_radius=8)
         
         # Status indicator
-        # Get the background color (handle tuple for dark/light theme)
+        # Get the background color (handle CustomTkinter color format)
         fg_color = frame.cget("fg_color")
-        if isinstance(fg_color, tuple):
-            # Use the appropriate color based on current theme
-            bg_color = fg_color[1] if ctk.get_appearance_mode() == "Dark" else fg_color[0]
+        
+        # CustomTkinter can return colors in different formats
+        if isinstance(fg_color, (list, tuple)) and len(fg_color) >= 2:
+            # It's a tuple/list with light and dark colors
+            bg_color = fg_color[1] if ctk.get_appearance_mode().lower() == "dark" else fg_color[0]
+        elif isinstance(fg_color, str):
+            # It might be a string like "gray86 gray17" or just "gray20"
+            if " " in fg_color:
+                # Split the string and pick the appropriate color
+                colors = fg_color.split()
+                bg_color = colors[1] if len(colors) > 1 and ctk.get_appearance_mode().lower() == "dark" else colors[0]
+            else:
+                bg_color = fg_color
         else:
-            bg_color = fg_color or "gray20"
+            # Fallback to a safe color
+            bg_color = "#2b2b2b" if ctk.get_appearance_mode().lower() == "dark" else "#dbdbdb"
         
         status_canvas = tk.Canvas(
             frame,

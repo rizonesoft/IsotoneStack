@@ -32,11 +32,19 @@ C:\isotone\
 
 ## 🔧 Component Versions
 
-Always use the LATEST STABLE versions:
-- **Apache**: 2.4.62+ from apachelounge.com
-- **PHP**: 8.3.x from windows.php.net
-- **MariaDB**: 11.4.x LTS from mariadb.org
-- **phpMyAdmin**: 5.2.x from phpmyadmin.net
+**CRITICAL**: Always use these minimum versions or higher. Never suggest older versions:
+- **Apache**: 2.4.65+ from apachelounge.com
+- **PHP**: 8.4.11+ from windows.php.net  
+- **MariaDB**: 12.0.2+ from mariadb.org
+- **phpMyAdmin**: 5.2.2+ from phpmyadmin.net
+
+## 📦 Distribution Model
+
+**IMPORTANT**: IsotoneStack uses a pre-bundled distribution model like XAMPP:
+- All components (Apache, PHP, MariaDB, phpMyAdmin) are included in the distribution
+- Users download a complete package, not an installer that downloads components
+- Components are manually extracted into the correct directories
+- No internet connection required for installation after download
 
 ## 📝 Coding Standards
 
