@@ -1,0 +1,40 @@
+# IsotoneStack Control Panel Requirements
+
+# Core GUI framework
+customtkinter>=5.2.0
+tkinter-tooltip>=2.1.0
+
+# System monitoring and control
+psutil>=5.9.5
+pywin32>=306
+
+# System tray support
+pystray>=0.19.5
+Pillow>=10.1.0
+
+# Database connectivity
+pymysql>=1.1.0
+mysql-connector-python>=8.2.0
+
+# Configuration and logging
+pyyaml>=6.0.1
+python-dotenv>=1.0.0
+colorlog>=6.7.0
+
+# Async support
+asyncio>=3.4.3
+aiofiles>=23.2.1
+
+# Web server monitoring
+requests>=2.31.0
+urllib3>=2.1.0
+
+# Charts and graphs (optional, for enhanced dashboard)
+matplotlib>=3.8.0
+
+# Auto-start with Windows
+pywinservicemanager>=1.0.5
+
+# Development tools (optional)
+black>=23.11.0
+pylint>=3.0.2

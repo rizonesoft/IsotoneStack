@@ -1,0 +1,203 @@
+# IsotoneStack .gitignore
+# Excludes binaries, runtime files, and user data while keeping source and configs
+
+# =====================================
+# Apache24 - Exclude binaries, keep configs
+# =====================================
+/apache24/bin/*.exe
+/apache24/bin/*.dll
+/apache24/modules/*.so
+/apache24/modules/*.dll
+/apache24/lib/
+/apache24/include/
+/apache24/icons/
+/apache24/error/
+/apache24/manual/
+/apache24/cgi-bin/
+# Keep configuration templates
+!/apache24/conf/
+/apache24/conf/*.default
+/apache24/conf/original/
+# Exclude logs
+/apache24/logs/
+
+# =====================================
+# PHP - Exclude binaries, keep configs
+# =====================================
+/php/*.exe
+/php/*.dll
+/php/ext/*.dll
+/php/lib/
+/php/include/
+/php/sasl2/
+/php/sdk/
+/php/extras/
+/php/dev/
+# Keep PHP configuration
+!/php/php.ini
+!/php/php.ini-development
+!/php/php.ini-production
+
+# =====================================
+# MariaDB - Exclude binaries and data
+# =====================================
+/mariadb/bin/*.exe
+/mariadb/bin/*.dll
+/mariadb/lib/
+/mariadb/include/
+/mariadb/share/
+/mariadb/scripts/
+/mariadb/mysql-test/
+# IMPORTANT: Exclude database data
+/mariadb/data/
+
+# =====================================
+# phpMyAdmin - Exclude downloaded files
+# =====================================
+/phpmyadmin/*
+# Keep configuration if customized
+!/phpmyadmin/config.inc.php
+
+# =====================================
+# User Content - COMPLETELY EXCLUDED
+# =====================================
+/www/
+!www/default/index.php
+!www/default/info.php
+
+# =====================================
+# Runtime and temporary files
+# =====================================
+/logs/
+/tmp/
+/temp/
+/cache/
+/sessions/
+*.log
+*.pid
+*.lock
+
+# =====================================
+# Security - Exclude sensitive files
+# =====================================
+/ssl/
+/certs/
+/keys/
+*.key
+*.crt
+*.pem
+*.pfx
+.env
+.env.*
+secrets.json
+passwords.txt
+
+# =====================================
+# Backups and dumps
+# =====================================
+/backups/
+*.sql
+*.dump
+*.tar
+*.tar.gz
+*.zip
+*.7z
+*.rar
+*.bak
+*.backup
+
+# =====================================
+# Python Control Panel
+# =====================================
+/control-panel-gui/venv/
+/control-panel-gui/__pycache__/
+/control-panel-gui/**/__pycache__/
+/control-panel-gui/*.pyc
+/control-panel-gui/**/*.pyc
+/control-panel-gui/.pytest_cache/
+/control-panel-gui/dist/
+/control-panel-gui/build/
+/control-panel-gui/*.egg-info/
+/control-panel-gui/logs/
+/control-panel-gui/config/settings.json
+/control-panel-gui/assets/icons/*.ico
+/control-panel-gui/assets/icons/*.png
+
+# =====================================
+# PowerShell Control Panel
+# =====================================
+/control-panel/*.log
+
+# =====================================
+# IDE and Editor files
+# =====================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =====================================
+# Windows specific
+# =====================================
+$RECYCLE.BIN/
+System Volume Information/
+pagefile.sys
+hiberfil.sys
+
+# =====================================
+# Downloads folder (installation cache)
+# =====================================
+/downloads/
+
+# =====================================
+# Installation state files
+# =====================================
+.installed
+.configured
+install.lock
+setup.log
+
+# =====================================
+# Git files to exclude
+# =====================================
+*.orig
+*.rej
+*.bak
+
+# =====================================
+# Keep these important files
+# =====================================
+!.gitignore
+!.gitattributes
+!README.md
+!CLAUDE.md
+!LICENSE
+!requirements.txt
+!install.ps1
+!Install-IsotoneStack.ps1
+
+# Keep all batch files
+!*.bat
+
+# Keep PowerShell scripts
+!/scripts/*.ps1
+!/control-panel/*.ps1
+
+# Keep configuration templates
+!/config/*.conf
+!/config/*.ini
+!/configs/
+
+# Keep control panel source
+!/control-panel-gui/main.py
+!/control-panel-gui/ui/
+!/control-panel-gui/services/
+!/control-panel-gui/utils/
+!/control-panel-gui/requirements.txt
+!/control-panel-gui/setup.py
+!/control-panel-gui/launch.bat
+!/control-panel-gui/README.md

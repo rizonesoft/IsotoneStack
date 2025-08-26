@@ -1,0 +1,114 @@
+# Git attributes for IsotoneStack
+# Ensures consistent line endings across different platforms
+
+# Default behavior - auto line ending conversion
+* text=auto
+
+# Source code files - always use LF
+*.php text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+*.svg text eol=lf
+*.py text eol=lf
+
+# Configuration files - always use LF
+*.conf text eol=lf
+*.ini text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+.htaccess text eol=lf
+.env text eol=lf
+
+# Shell scripts - always use LF
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Windows scripts - always use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Documentation - always use LF
+*.md text eol=lf
+*.txt text eol=lf
+README text eol=lf
+LICENSE text eol=lf
+CHANGELOG text eol=lf
+
+# SQL files - always use LF
+*.sql text eol=lf
+
+# Git files
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Binary files - no line ending conversion
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.jar binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.7z binary
+*.rar binary
+
+# Images
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.ico binary
+*.bmp binary
+*.webp binary
+
+# Fonts
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+
+# Documents
+*.pdf binary
+*.doc binary
+*.docx binary
+*.xls binary
+*.xlsx binary
+
+# Database files
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+
+# Certificates
+*.key binary
+*.crt binary
+*.pem binary
+*.pfx binary
+
+# Diff settings for better readability
+*.php diff=php
+*.html diff=html
+*.css diff=css
+*.py diff=python
+
+# Export ignore - files not needed in archive downloads
+.gitignore export-ignore
+.gitattributes export-ignore
+.github/ export-ignore
+tests/ export-ignore
+docs/ export-ignore
+*.md export-ignore
+
+# Linguist settings - help GitHub identify the project correctly
+*.conf linguist-detectable=true
+*.ini linguist-detectable=true
+*.ps1 linguist-detectable=true
+docs/* linguist-documentation
+config/* linguist-vendored=false

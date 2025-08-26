@@ -1,0 +1,66 @@
+MIT License
+
+Copyright (c) 2024 IsotoneStack
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+THIRD-PARTY SOFTWARE LICENSES
+================================================================================
+
+This software includes or downloads the following third-party components,
+each with their own licenses:
+
+Apache HTTP Server
+------------------
+Copyright Apache Software Foundation
+Licensed under the Apache License, Version 2.0
+https://www.apache.org/licenses/LICENSE-2.0
+
+PHP
+---
+Copyright (c) The PHP Group
+Licensed under the PHP License, version 3.01
+https://www.php.net/license/3_01.txt
+
+MariaDB
+-------
+Copyright (c) MariaDB Foundation
+Licensed under the GNU General Public License v2
+https://mariadb.com/kb/en/mariadb-license/
+
+phpMyAdmin
+----------
+Copyright (c) phpMyAdmin contributors
+Licensed under the GNU General Public License v2
+https://www.phpmyadmin.net/license/
+
+Python Packages (Control Panel GUI)
+------------------------------------
+- CustomTkinter: Copyright (c) Tom Schimansky, MIT License
+- psutil: Copyright (c) Giampaolo Rodola, BSD License
+- Pillow: Copyright (c) PIL Contributors, HPND License
+- pystray: Copyright (c) Moses Palmér, LGPLv3 License
+- PyMySQL: Copyright (c) PyMySQL contributors, MIT License
+
+================================================================================
+
+Note: The IsotoneStack installer and management scripts are MIT licensed.
+The downloaded binary components retain their original licenses as listed above.
+Users must comply with all applicable licenses when using IsotoneStack.
