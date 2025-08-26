@@ -98,12 +98,20 @@ class Dashboard:
         frame = ctk.CTkFrame(parent, corner_radius=8)
         
         # Status indicator
+        # Get the background color (handle tuple for dark/light theme)
+        fg_color = frame.cget("fg_color")
+        if isinstance(fg_color, tuple):
+            # Use the appropriate color based on current theme
+            bg_color = fg_color[1] if ctk.get_appearance_mode() == "Dark" else fg_color[0]
+        else:
+            bg_color = fg_color or "gray20"
+        
         status_canvas = tk.Canvas(
             frame,
             width=20,
             height=20,
             highlightthickness=0,
-            bg=frame.cget("fg_color")[1] if isinstance(frame.cget("fg_color"), tuple) else frame.cget("fg_color")
+            bg=bg_color
         )
         status_canvas.pack(side="left", padx=(15, 10), pady=15)
         
