@@ -22,12 +22,6 @@
 # =====================================
 # Component directories - Bundled with distribution
 # =====================================
-/apache24/
-/mariadb/
-/php/
-/phpmyadmin/
-/pwsh/
-/bin/
 
 # =====================================
 # Database data - Created during initialization
@@ -69,6 +63,7 @@
 # =====================================
 # IDE files - Created by editors
 # =====================================
+.claude/
 .vscode/
 .idea/
 *.swp
