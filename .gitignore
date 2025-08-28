@@ -21,14 +21,15 @@
 
 # =====================================
 # Component directories - Distributed as release assets
+# These should be symlinks to C:\isotone-components\ in dev environments
 # =====================================
-/apache24/
-/distribution/
-/mariadb/
-/php/
-/phpmyadmin/
-/pwsh/
-/bin/
+/apache24
+/distribution
+/mariadb
+/php
+/phpmyadmin
+/pwsh
+/bin
 
 # =====================================
 # Database data - Created during initialization
