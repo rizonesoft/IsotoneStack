@@ -20,10 +20,6 @@
 *.lock
 
 # =====================================
-# Component directories - Bundled with distribution
-# =====================================
-
-# =====================================
 # Database data - Created during initialization
 # =====================================
 /mariadb/data/
