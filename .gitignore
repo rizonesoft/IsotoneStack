@@ -20,14 +20,14 @@
 *.lock
 
 # =====================================
-# Component directories - Downloaded/extracted files
+# Component directories - Bundled with distribution
 # =====================================
 /apache24/
 /mariadb/
 /php/
 /phpmyadmin/
+/pwsh/
 /bin/
-/downloads/
 
 # =====================================
 # Database data - Created during initialization

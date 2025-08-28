@@ -1,0 +1,41 @@
+MariaDB Server License
+======================
+
+MariaDB Server is licensed under the GNU General Public License version 2.
+
+Copyright (C) 2024 MariaDB Corporation Ab
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1335 USA
+
+================================================================================
+
+MariaDB Server includes code from the following projects:
+
+- MySQL (GPL v2)
+- Percona XtraDB (GPL v2)
+- Google SMP Patch (BSD-new)
+- Various compression libraries (various licenses)
+
+For complete license information, please see:
+https://mariadb.com/kb/en/licensing-faq/
+
+================================================================================
+
+The MariaDB Connector/C is distributed under the LGPL license version 2.1 or later.
+The MariaDB Client Library for Java Applications is distributed under LGPL.
+MariaDB Connector/ODBC is distributed under LGPL.
+
+================================================================================
+
+GPL v2 License Text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
