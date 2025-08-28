@@ -39,6 +39,7 @@
 - ❌ Don't include user data in `/www/`
 - ❌ Never remove configuration files from bundled components - IsotoneStack modifies configs in place like XAMPP
 - ❌ Don't create download scripts - everything is bundled
+- ❌ Never enable mod_headers (#LoadModule headers_module) in Apache - it causes issues
 
 ### Always Do These
 - ✅ Check for Administrator privileges when needed

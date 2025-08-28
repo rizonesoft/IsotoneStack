@@ -15,7 +15,9 @@ IsotoneStack follows the XAMPP distribution model:
 - **Apache** 2.4.65 (Latest stable)
 - **PHP** 8.4.11 (Latest stable)
 - **MariaDB** 12.0.2 (Latest stable)
-- **phpMyAdmin** 5.2.2 (Latest stable)
+- **SQLite** 3 (Built into PHP - file-based database)
+- **phpMyAdmin** 5.2.2 (Latest stable - MariaDB management)
+- **phpLiteAdmin** 1.9.8.2 (SQLite database management)
 - **Control Panel** - Modern Python/CustomTkinter GUI
 
 ## ✨ Features
@@ -44,13 +46,15 @@ If you're building from source or updating components:
    - PHP 8.4.11+ from [windows.php.net](https://windows.php.net/download/)
    - MariaDB 12.0.2+ from [mariadb.org](https://mariadb.org/download/)
    - phpMyAdmin 5.2.2+ from [phpmyadmin.net](https://www.phpmyadmin.net/downloads/)
+   - phpLiteAdmin 1.9.8.2+ from [phpliteadmin.org](https://www.phpliteadmin.org/)
 
 2. **Extract to correct directories:**
    ```
-   C:\isotone\apache24\    ← Apache files
-   C:\isotone\php\         ← PHP files
-   C:\isotone\mariadb\     ← MariaDB files
-   C:\isotone\phpmyadmin\  ← phpMyAdmin files
+   C:\isotone\apache24\      ← Apache files
+   C:\isotone\php\           ← PHP files
+   C:\isotone\mariadb\       ← MariaDB files
+   C:\isotone\phpmyadmin\    ← phpMyAdmin files
+   C:\isotone\phpliteadmin\  ← phpLiteAdmin files
    ```
 
 3. **Run setup script:**
@@ -101,7 +105,9 @@ C:\isotone\
 ├── apache24/          # Apache 2.4.65+ binaries
 ├── php/               # PHP 8.4.11+ binaries
 ├── mariadb/           # MariaDB 12.0.2+ binaries
+├── sqlite/            # SQLite databases directory
 ├── phpmyadmin/        # phpMyAdmin 5.2.2+ web app
+├── phpliteadmin/      # phpLiteAdmin 1.9.8.2 SQLite manager
 ├── runtime/           # VC++ Runtime installer (included)
 │   └── vc_redist.x64.exe
 ├── control-panel/     # Python GUI application
@@ -120,8 +126,11 @@ C:\isotone\
 ## 🌐 Access Points
 
 - **Web Server:** http://localhost
-- **phpMyAdmin:** http://localhost/phpmyadmin
+- **phpMyAdmin:** http://localhost/phpmyadmin (MariaDB management)
+- **phpLiteAdmin:** http://localhost/phpliteadmin (SQLite management)
+- **SQLite Direct:** http://localhost/sqlite (Alias to phpLiteAdmin)
 - **MariaDB:** localhost:3306
+- **SQLite:** File-based in C:\isotone\sqlite\
   - Default user: `root`
   - Default password: *(set during setup)*
 

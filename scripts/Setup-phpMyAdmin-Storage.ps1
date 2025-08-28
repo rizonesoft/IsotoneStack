@@ -315,7 +315,7 @@ CREATE TABLE IF NOT EXISTS `pma__export_templates` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Saved export templates';
 
 -- Create control user
-CREATE USER IF NOT EXISTS 'pma'@'localhost' IDENTIFIED BY 'pmapass';
+CREATE USER IF NOT EXISTS 'pma'@'localhost' IDENTIFIED BY '6&94Zrw|C>(=0f){Ni;T#>C#';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER ON `phpmyadmin`.* TO 'pma'@'localhost';
 FLUSH PRIVILEGES;
 '@
@@ -339,7 +339,11 @@ FLUSH PRIVILEGES;
     
     # Execute SQL script
     try {
-        $result = & $mysqlExe $mysqlArgs -e "source `"$createTablesSQL`"" 2>&1 | Out-String
+        # Convert path to use forward slashes for MySQL source command
+        $sqlPath = $createTablesSQL -replace '\\', '/'
+        
+        # Execute the SQL file using input redirection instead of source command
+        $result = Get-Content $createTablesSQL | & $mysqlExe $mysqlArgs 2>&1 | Out-String
         
         if ($result -match "ERROR") {
             Write-Log "SQL execution output: $result" "WARNING"
@@ -428,7 +432,7 @@ $cfg['Servers'][$i]['export_templates'] = 'pma__export_templates';
     Write-Log "" "INFO"
     Write-Log "Database: phpmyadmin" "INFO"
     Write-Log "Control User: pma" "INFO"
-    Write-Log "Control Password: pmapass" "INFO"
+    Write-Log "Control Password: [Configured in config.inc.php]" "INFO"
     Write-Log "" "INFO"
     Write-Log "You may need to:" "YELLOW"
     Write-Log "  1. Restart Apache service" "DEBUG"

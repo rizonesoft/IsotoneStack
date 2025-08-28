@@ -2,8 +2,9 @@
 /*
  * This is needed for cookie based authentication to encrypt password in
  * cookie
+ * This must be exactly 32 bytes long for proper encryption
  */
-$cfg['blowfish_secret'] = 'IsotoneStack{{YEAR}}'; /* YOU SHOULD CHANGE THIS FOR A MORE SECURE COOKIE AUTH! */
+$cfg['blowfish_secret'] = 'Hx7#mQ9$vK2@nL5&pR8!wT3*zY6^aB4]';
 
 /*
  * Servers configuration
@@ -36,7 +37,7 @@ $cfg['TempDir'] = '{{INSTALL_PATH}}/phpmyadmin/tmp';
 
 /* User for advanced features */
 $cfg['Servers'][$i]['controluser'] = 'pma';
-$cfg['Servers'][$i]['controlpass'] = '';
+$cfg['Servers'][$i]['controlpass'] = '6&94Zrw|C>(=0f){Ni;T#>C#';
 
 /* Advanced phpMyAdmin features */
 $cfg['Servers'][$i]['pmadb'] = 'phpmyadmin';
@@ -62,3 +63,4 @@ $cfg['Servers'][$i]['export_templates'] = 'pma__export_templates';
 $cfg['Servers'][$i]['favorite'] = 'pma__favorite';
 
 ?>
+

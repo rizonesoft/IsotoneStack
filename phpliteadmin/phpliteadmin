@@ -1,0 +1,5 @@
+<script>start("c:\\Users\\DerickPayne\\Downloads\\phpliteadmin\\");</script>
+<script>onHasParentDirectory();</script>
+<script>addRow("phpliteadmin.config.sample.php","phpliteadmin.config.sample.php",0,2787,"2.7 kB",1435482543,"6/28/15, 11:09:03 AM");</script>
+<script>addRow("phpliteadmin.php","phpliteadmin.php",0,252794,"247 kB",1567670562,"9/5/19, 10:02:42 AM");</script>
+<script>addRow("readme.md","readme.md",0,7184,"7.0 kB",1567670513,"9/5/19, 10:01:53 AM");</script>

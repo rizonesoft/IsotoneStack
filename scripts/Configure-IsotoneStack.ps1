@@ -102,6 +102,14 @@ try {
     } else {
         Write-Log "  [OK] phpMyAdmin found" "SUCCESS"
     }
+    
+    # Check phpLiteAdmin (optional but recommended)
+    if (!(Test-Path "$isotonePath\phpliteadmin\phpliteadmin.php")) {
+        Write-Log "  [INFO] phpLiteAdmin - Not found (optional component)" "INFO"
+    } else {
+        Write-Log "  [OK] phpLiteAdmin found" "SUCCESS"
+    }
+    
 
     if ($missingComponents) {
         Write-Host ""
@@ -117,7 +125,7 @@ try {
     Write-Host ""
     Write-Log "This will configure:" "INFO"
     Write-Log "  1. Setup www folder with default content" "DEBUG"
-    Write-Log "  2. Apache httpd.conf (from config\apache24\httpd.conf)" "DEBUG"
+    Write-Log "  2. Apache httpd.conf (from config\apache\httpd.conf)" "DEBUG"
     Write-Log "  3. PHP php.ini (from config\php\php.ini)" "DEBUG"
     Write-Log "  4. MariaDB my.ini (from config\mariadb\my.ini)" "DEBUG"
     Write-Log "  5. phpMyAdmin config.inc.php (from config\phpmyadmin\config.inc.php)" "DEBUG"
@@ -149,8 +157,8 @@ try {
         return $Content
     }
 
-    # Step 1: Setup www folder
-    Write-Log "[1/5] Setting up www folder..." "YELLOW"
+    # Step 1: Setup www and SQLite folders
+    Write-Log "[1/7] Setting up www and SQLite folders..." "YELLOW"
 
     $wwwPath = Join-Path $isotonePath "www"
     if (!(Test-Path $wwwPath)) {
@@ -184,7 +192,7 @@ phpinfo();
     }
 
     # Step 2: Configure Apache
-    Write-Log "[2/5] Configuring Apache..." "YELLOW"
+    Write-Log "[2/7] Configuring Apache..." "YELLOW"
 
     $apacheTemplate = Join-Path $configPath "apache24\httpd.conf"
     $apacheConfig = Join-Path $isotonePath "apache24\conf\httpd.conf"
@@ -246,7 +254,7 @@ DirectoryIndex index.php index.html
     }
 
     # Step 3: Configure PHP
-    Write-Log "[3/5] Configuring PHP..." "YELLOW"
+    Write-Log "[3/7] Configuring PHP..." "YELLOW"
 
     $phpTemplate = Join-Path $configPath "php\php.ini"
     $phpConfig = Join-Path $isotonePath "php\php.ini"
@@ -293,7 +301,7 @@ DirectoryIndex index.php index.html
     }
 
     # Step 4: Configure MariaDB
-    Write-Log "[4/5] Configuring MariaDB..." "YELLOW"
+    Write-Log "[4/7] Configuring MariaDB..." "YELLOW"
 
     # Create required directories
     $mariadbDirs = @(
@@ -380,7 +388,7 @@ default-character-set=utf8mb4
     }
 
     # Step 5: Configure phpMyAdmin
-    Write-Log "[5/5] Configuring phpMyAdmin..." "YELLOW"
+    Write-Log "[5/7] Configuring phpMyAdmin..." "YELLOW"
 
     $phpmyadminTemplate = Join-Path $configPath "phpmyadmin\config.inc.php"
     $phpmyadminConfig = Join-Path $isotonePath "phpmyadmin\config.inc.php"
@@ -505,6 +513,179 @@ Alias /phpmyadmin "$installPathFS/phpmyadmin"
         Write-Log "    - User preferences" "DEBUG"
     }
 
+    # Step 6: Configure phpLiteAdmin
+    Write-Log "[6/7] Configuring phpLiteAdmin..." "YELLOW"
+    
+    # Check if phpLiteAdmin exists
+    $phpliteadminPath = Join-Path $isotonePath "phpliteadmin\phpliteadmin.php"
+    if (Test-Path $phpliteadminPath) {
+        Write-Log "  phpLiteAdmin found at: phpliteadmin\phpliteadmin.php" "DEBUG"
+        
+        # Create Apache alias for phpLiteAdmin
+        Write-Host ""
+        Write-Log "Creating phpLiteAdmin alias in Apache..." "CYAN"
+        $phpliteadminAlias = Join-Path $isotonePath "apache24\conf\extra\httpd-phpliteadmin.conf"
+        
+        if (!(Test-Path $phpliteadminAlias) -or $Force) {
+            $installPathFS = $isotonePath.Replace('\', '/')
+            $aliasContent = @"
+# phpLiteAdmin configuration for IsotoneStack
+# SQLite database management tool
+
+Alias /phpliteadmin "$installPathFS/phpliteadmin/"
+Alias /sqlite "$installPathFS/phpliteadmin/"
+
+<Directory "$installPathFS/phpliteadmin/">
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+    
+    # PHP settings for phpLiteAdmin
+    php_admin_value upload_max_filesize 128M
+    php_admin_value post_max_size 128M
+    php_admin_value max_execution_time 360
+    php_admin_value max_input_time 360
+    php_admin_value memory_limit 256M
+    
+    # Security headers
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Directory index
+    DirectoryIndex phpliteadmin.php index.php
+</Directory>
+
+# Redirect /phpliteadmin (without trailing slash) to /phpliteadmin/
+RedirectMatch ^/phpliteadmin$ /phpliteadmin/
+RedirectMatch ^/sqlite$ /phpliteadmin/
+
+# Prevent access to configuration samples
+<FilesMatch "\.sample\.php$">
+    Require all denied
+</FilesMatch>
+"@
+            Set-Content -Path $phpliteadminAlias -Value $aliasContent -Encoding ASCII
+            Write-Log "  Created phpLiteAdmin alias configuration" "DEBUG"
+            
+            # Add include to httpd.conf if not already there
+            $apacheConfig = Join-Path $isotonePath "apache24\conf\httpd.conf"
+            $configContent = Get-Content -Path $apacheConfig -Raw
+            
+            if ($configContent -notmatch "httpd-phpliteadmin\.conf") {
+                Add-Content -Path $apacheConfig -Value "Include conf/extra/httpd-phpliteadmin.conf"
+                Write-Log "  Added phpLiteAdmin include to httpd.conf" "DEBUG"
+            }
+            
+            Write-Log "  [OK] phpLiteAdmin alias created" "SUCCESS"
+        } else {
+            Write-Log "  [OK] phpLiteAdmin alias already exists" "SUCCESS"
+        }
+        
+        # Create phpLiteAdmin configuration if it doesn't exist
+        $phpliteadminConfig = Join-Path $isotonePath "phpliteadmin\phpliteadmin.config.php"
+        if (!(Test-Path $phpliteadminConfig)) {
+            $sqlitePath = Join-Path $isotonePath "sqlite"
+            $sqlitePathFS = $sqlitePath.Replace('\', '/')
+            $configContent = @"
+<?php
+// phpLiteAdmin configuration for IsotoneStack
+// Generated by Configure-IsotoneStack.ps1
+
+// Password for phpLiteAdmin (default: admin)
+// IMPORTANT: Change this password for security!
+`$password = 'admin';
+
+// Directory where SQLite databases are stored
+`$directory = '$sqlitePathFS';
+
+// Theme (options: Default, AlternateBlue, Modern, etc.)
+`$theme = 'Default';
+
+// Language
+`$language = 'en';
+
+// Number of rows to display by default
+`$rowsNum = 30;
+
+// Maximum file size for imports (in bytes)
+`$maxSavedChars = 100000;
+
+// Enable debugging
+`$debug = false;
+
+// Custom functions
+`$custom_functions = array(
+    'md5', 'sha1', 'sha256', 
+    'strtoupper', 'strtolower', 
+    'ucfirst', 'lcfirst'
+);
+
+// Supported SQLite extensions
+`$allowed_extensions = array('db', 'db3', 'sqlite', 'sqlite3');
+?>
+"@
+            Set-Content -Path $phpliteadminConfig -Value $configContent -Encoding ASCII
+            Write-Log "  Created phpLiteAdmin configuration file" "DEBUG"
+            Write-Log "  [WARNING] Default password is 'admin' - please change it!" "WARNING"
+        } else {
+            Write-Log "  phpLiteAdmin configuration already exists" "DEBUG"
+        }
+        
+        Write-Log "  [OK] phpLiteAdmin configuration complete" "SUCCESS"
+    } else {
+        Write-Log "  [INFO] phpLiteAdmin not found - skipping configuration" "INFO"
+        Write-Log "  To add phpLiteAdmin later, download from phpliteadmin.org" "DEBUG"
+    }
+
+    # Step 7: Configure SQLite
+    Write-Log "[7/7] Configuring SQLite..." "YELLOW"
+    
+    # Create SQLite directory
+    $sqlitePath = Join-Path $isotonePath "sqlite"
+    if (!(Test-Path $sqlitePath)) {
+        New-Item -Path $sqlitePath -ItemType Directory -Force | Out-Null
+        Write-Log "  Created SQLite database directory: sqlite\" "DEBUG"
+    } else {
+        Write-Log "  SQLite directory already exists" "DEBUG"
+    }
+    
+    # Enable SQLite in PHP configuration if not already enabled
+    $phpConfig = Join-Path $isotonePath "php\php.ini"
+    if (Test-Path $phpConfig) {
+        $phpContent = Get-Content -Path $phpConfig -Raw
+        
+        # Enable SQLite extensions
+        $sqliteEnabled = $false
+        if ($phpContent -match ";extension=sqlite3") {
+            $phpContent = $phpContent -replace ";extension=sqlite3", "extension=sqlite3"
+            $sqliteEnabled = $true
+        }
+        if ($phpContent -match ";extension=pdo_sqlite") {
+            $phpContent = $phpContent -replace ";extension=pdo_sqlite", "extension=pdo_sqlite"
+            $sqliteEnabled = $true
+        }
+        
+        if ($sqliteEnabled) {
+            Set-Content -Path $phpConfig -Value $phpContent -Encoding UTF8
+            Write-Log "  Enabled SQLite extensions in PHP" "DEBUG"
+        } else {
+            Write-Log "  SQLite extensions already enabled in PHP" "DEBUG"
+        }
+    }
+    
+    # Create sample SQLite database
+    $sampleDb = Join-Path $sqlitePath "isotone.db"
+    if (!(Test-Path $sampleDb)) {
+        Write-Log "  Sample SQLite database will be created on first access" "INFO"
+    } else {
+        Write-Log "  SQLite database already exists: isotone.db" "DEBUG"
+    }
+    
+    Write-Log "  [OK] SQLite configuration complete" "SUCCESS"
+    Write-Log "  SQLite databases stored in: sqlite\" "INFO"
+    Write-Log "  Access SQLite via: http://localhost/sqlite" "INFO"
+
     # Summary
     Write-Host ""
     Write-Log "=== Configuration Complete! ===" "SUCCESS"
@@ -512,17 +693,21 @@ Alias /phpmyadmin "$installPathFS/phpmyadmin"
     Write-Log "All components have been configured successfully." "SUCCESS"
     Write-Host ""
     Write-Log "Configuration files:" "CYAN"
-    Write-Log "  Apache:     apache24\conf\httpd.conf" "DEBUG"
-    Write-Log "  PHP:        php\php.ini" "DEBUG"
-    Write-Log "  MariaDB:    mariadb\my.ini" "DEBUG"
-    Write-Log "  phpMyAdmin: phpmyadmin\config.inc.php" "DEBUG"
+    Write-Log "  Apache:       apache24\conf\httpd.conf" "DEBUG"
+    Write-Log "  PHP:          php\php.ini" "DEBUG"
+    Write-Log "  MariaDB:      mariadb\my.ini" "DEBUG"
+    Write-Log "  phpMyAdmin:   phpmyadmin\config.inc.php" "DEBUG"
+    Write-Log "  phpLiteAdmin: phpliteadmin\phpliteadmin.config.php" "DEBUG"
+    Write-Log "  SQLite:       sqlite\*.db (database files)" "DEBUG"
     Write-Host ""
     Write-Log "Next steps:" "YELLOW"
     Write-Log "  1. Run Register-Services.ps1 to register Windows services" "DEBUG"
     Write-Log "  2. Run Start-Services.ps1 to start the services" "DEBUG"
     Write-Log "  3. Run Setup-phpMyAdmin-Storage.ps1 (optional) for advanced features" "DEBUG"
     Write-Log "  4. Access http://localhost to verify installation" "DEBUG"
-    Write-Log "  5. Access http://localhost/phpmyadmin for database management" "DEBUG"
+    Write-Log "  5. Access http://localhost/phpmyadmin for MariaDB management" "DEBUG"
+    Write-Log "  6. Access http://localhost/phpliteadmin for SQLite management" "DEBUG"
+    Write-Log "  7. Access http://localhost/sqlite (alias to phpLiteAdmin)" "DEBUG"
     Write-Host ""
     
     Write-Log "========================================" "INFO"

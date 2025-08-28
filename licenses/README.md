@@ -10,6 +10,7 @@ This directory contains the licenses for all open-source components included in 
 | PHP | 8.3.x | PHP License 3.01 | [PHP-8.3-LICENSE.txt](PHP-8.3-LICENSE.txt) |
 | MariaDB | 11.6.x | GPL v2 | [MariaDB-11.6-LICENSE.txt](MariaDB-11.6-LICENSE.txt) |
 | phpMyAdmin | 5.2.x | GPL v2 | [phpMyAdmin-5.2-LICENSE.txt](phpMyAdmin-5.2-LICENSE.txt) |
+| phpLiteAdmin | 1.9.8.x | GPL v3 | [phpLiteAdmin-1.9.8-LICENSE.txt](phpLiteAdmin-1.9.8-LICENSE.txt) |
 | PowerShell | 7.5.x | MIT License | [PowerShell-7.5-LICENSE.txt](PowerShell-7.5-LICENSE.txt) |
 | 7-Zip | Latest | GNU LGPL | [7-Zip-LICENSE.txt](7-Zip-LICENSE.txt) |
 | wget | Latest | GPL v3 | [wget-LICENSE.txt](wget-LICENSE.txt) |
@@ -23,7 +24,7 @@ All included components are distributed under open-source licenses that permit:
 
 ## Important Notes
 
-1. **GPL Licensed Components**: MariaDB and phpMyAdmin are licensed under GPL v2. If you distribute modified versions of these components, you must make the source code available.
+1. **GPL Licensed Components**: MariaDB and phpMyAdmin are licensed under GPL v2, phpLiteAdmin under GPL v3. If you distribute modified versions of these components, you must make the source code available.
 
 2. **Apache License**: The Apache HTTP Server requires preservation of copyright notices and disclaimer.
 
@@ -45,6 +46,7 @@ For the most up-to-date license information, please visit the official websites 
 - PHP: https://www.php.net/license/
 - MariaDB: https://mariadb.com/kb/en/licensing-faq/
 - phpMyAdmin: https://www.phpmyadmin.net/license/
+- phpLiteAdmin: https://www.phpliteadmin.org/
 - PowerShell: https://github.com/PowerShell/PowerShell/blob/master/LICENSE.txt
 - 7-Zip: https://www.7-zip.org/license.txt
 - wget: https://www.gnu.org/software/wget/
