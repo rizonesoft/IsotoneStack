@@ -23,7 +23,7 @@ set "PWSH_EXE=%ISOTONE_PATH%\pwsh\pwsh.exe"
 net session >nul 2>&1
 if %errorLevel% neq 0 (
     echo Requesting Administrator privileges for symbolic links...
-    powershell -Command "Start-Process '%~f0' -Verb RunAs -ArgumentList '%*' -WorkingDirectory '%~dp0'"
+    powershell -Command "Start-Process '%~f0' '%*' -Verb RunAs -WorkingDirectory '%~dp0'"
     exit /b
 )
 
