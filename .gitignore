@@ -20,6 +20,17 @@
 *.lock
 
 # =====================================
+# Component directories - Distributed as release assets
+# =====================================
+/apache24/
+/distribution/
+/mariadb/
+/php/
+/phpmyadmin/
+/pwsh/
+/bin/
+
+# =====================================
 # Database data - Created during initialization
 # =====================================
 /mariadb/data/
