@@ -4642,7 +4642,8 @@ class Database
 	//get the filename of the database
 	public function getPath()
 	{
-		return $this->data["path"];
+		// Normalize path to use forward slashes
+		return str_replace('\\', '/', $this->data["path"]);
 	}
 
 	//is the db-file writable?

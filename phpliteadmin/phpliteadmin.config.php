@@ -11,7 +11,7 @@ $directory = 'C:/isotone/sqlite';
 
 // Theme (options: Default, AlternateBlue, Modern, etc.)
 // Use the path to the theme CSS file
-$theme = 'modern.css';
+$theme = 'themes/modern.css';
 
 // Language
 $language = 'en';
