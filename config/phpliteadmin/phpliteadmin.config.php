@@ -10,7 +10,7 @@ $password = 'admin';
 $directory = '{{INSTALL_PATH}}/sqlite';
 
 // Theme (options: Default, AlternateBlue, Modern, Bootstrap, Flat, etc.)
-$theme = 'Default';
+$theme = 'themes/modern.css';
 
 // Language
 $language = 'en';

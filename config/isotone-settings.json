@@ -1,0 +1,24 @@
+{
+    "logging": {
+        "defaultLogLevel": "INFO",
+        "maxLogSizeMB": 10,
+        "maxLogAgeDays": 30,
+        "verbose": false,
+        "cleanupEnabled": true,
+        "logToFile": true,
+        "logToConsole": true,
+        "consoleLogLevels": ["ERROR", "WARNING", "SUCCESS"],
+        "archiveOldLogs": true
+    },
+    "services": {
+        "autoStart": false,
+        "startupDelay": 5
+    },
+    "paths": {
+        "useRelativePaths": true
+    },
+    "development": {
+        "debugMode": false,
+        "showStackTraces": true
+    }
+}

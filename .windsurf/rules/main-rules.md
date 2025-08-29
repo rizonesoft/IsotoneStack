@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 ### PowerShell Script Rules
 - ✅ All PowerShell scripts must use portable PowerShell from `.\pwsh\pwsh.exe`
 - ✅ All scripts (.ps1 and .bat) go in `.\scripts\` folder unless explicitly requested in root

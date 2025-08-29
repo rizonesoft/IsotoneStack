@@ -52,6 +52,7 @@
 # User websites - Created by developers
 # =====================================
 /www/*
+!/www/demo/
 !/www/default/
 
 # =====================================
