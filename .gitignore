@@ -24,8 +24,11 @@
 # These should be symlinks to C:\isotone-components\ in dev environments
 # =====================================
 /apache24
+/browser
 /distribution
+/mailpit
 /mariadb
+/mariadb_imports
 /php
 /phpmyadmin
 /pwsh

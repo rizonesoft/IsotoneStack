@@ -1,11 +1,13 @@
 # Unregister-Services.ps1
-# Unregisters Apache and MariaDB Windows services for IsotoneStack
+# Unregisters Apache, MariaDB and Mailpit Windows services for IsotoneStack
 # Only removes service registrations - does not delete any files or data
 # Requires Administrator privileges
 
 param(
-    [switch]$Force      # Force stop and removal even if services are running
-,`n    [switch]$Verbose,`n    [switch]$Debug)
+    [switch]$Force,      # Force stop and removal even if services are running
+    [switch]$Verbose,    # Enable verbose output
+    [switch]$Debug       # Enable debug output
+)
 
 #Requires -Version 5.1
 #Requires -RunAsAdministrator
@@ -44,302 +46,7 @@ if (Test-Path $settingsFile) {
     }
     catch {
         # If settings file is corrupted, use defaults
-        Write-Warning "Failed to load settings file: # Unregister-Services.ps1
-# Unregisters Apache and MariaDB Windows services for IsotoneStack
-# Only removes service registrations - does not delete any files or data
-# Requires Administrator privileges
-
-param(
-    [switch]$Force      # Force stop and removal even if services are running
-,`n    [switch]$Verbose,`n    [switch]$Debug)
-
-#Requires -Version 5.1
-#Requires -RunAsAdministrator
-
-# Get script locations using portable paths
-$scriptPath = $PSScriptRoot
-$isotonePath = Split-Path -Parent $scriptPath
-$logsPath = Join-Path $isotonePath "logs\isotone"
-
-
-
-# Function to check if a service exists
-function Test-ServiceExists {
-    param([string]$ServiceName,`n    [switch]$Verbose,`n    [switch]$Debug)
-    
-    $service = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
-    return $null -ne $service
-}
-
-# Function to stop a service
-function Stop-ServiceSafe {
-    param([string]$ServiceName,`n    [switch]$Verbose,`n    [switch]$Debug)
-    
-    if (Test-ServiceExists $ServiceName) {
-        $service = Get-Service -Name $ServiceName
-        
-        if ($service.Status -eq 'Running') {
-            Write-Log "  Stopping service: $ServiceName" "WARNING"
-            try {
-                Stop-Service -Name $ServiceName -Force -ErrorAction Stop
-                
-                # Wait for service to stop (max 30 seconds)
-                $timeout = 30
-                $waited = 0
-                while ((Get-Service -Name $ServiceName).Status -ne 'Stopped' -and $waited -lt $timeout) {
-                    Start-Sleep -Seconds 1
-                    $waited++
-                }
-                
-                if ((Get-Service -Name $ServiceName).Status -eq 'Stopped') {
-                    Write-Log "  [OK] Service stopped: $ServiceName" "SUCCESS"
-                    return $true
-                } else {
-                    Write-Log "  [WARNING] Service did not stop within timeout: $ServiceName" "WARNING"
-                    return $false
-                }
-            } catch {
-                Write-Log "  [ERROR] Failed to stop service: $_" "ERROR"
-                return $false
-            }
-        } else {
-            Write-Log "  Service already stopped: $ServiceName" "DEBUG"
-            return $true
-        }
-    }
-    return $true
-}
-
-try {
-    # Start logging
-    
-    Write-Log "$scriptName Started (IsotoneStack: $isotonePath)" "INFO" -AlwaysLog
-    
-    Write-Log "Parameters: $($PSBoundParameters | Out-String)" "DEBUG"
-    
-    
-    Write-Host ""
-    Write-Log "=== IsotoneStack Service Unregistration ===" "MAGENTA"
-    Write-Host ""
-    
-    # Check for Administrator privileges (redundant but ensures we're admin)
-    $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = New-Object Security.Principal.WindowsPrincipal($currentUser)
-    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        Write-Log "This script requires Administrator privileges" "ERROR"
-        Write-Log "Please run this script as Administrator" "ERROR"
-        exit 1
-    }
-    Write-Log "[OK] Running with Administrator privileges" "SUCCESS"
-    Write-Host ""
-    
-    # Check what services exist
-    Write-Log "Checking for existing services..." "CYAN"
-    $apacheExists = Test-ServiceExists $apacheServiceName
-    $mariadbExists = Test-ServiceExists $mariadbServiceName
-    
-    if (!$apacheExists -and !$mariadbExists) {
-        Write-Log "No IsotoneStack services found to unregister" "WARNING"
-        Write-Host ""
-        exit 0
-    }
-    
-    if ($apacheExists) {
-        Write-Log "  [FOUND] $apacheServiceName service" "INFO"
-    }
-    if ($mariadbExists) {
-        Write-Log "  [FOUND] $mariadbServiceName service" "INFO"
-    }
-    
-    Write-Host ""
-    
-    # Confirm unregistration unless Force is specified
-    if (!$Force) {
-        Write-Log "This will unregister the following Windows services:" "WARNING"
-        if ($apacheExists) {
-            Write-Log "  - $apacheServiceName" "WARNING"
-        }
-        if ($mariadbExists) {
-            Write-Log "  - $mariadbServiceName" "WARNING"
-        }
-        Write-Host ""
-        Write-Log "NOTE: This only removes the Windows service registrations." "INFO"
-        Write-Log "      No files or data will be deleted." "INFO"
-        Write-Host ""
-        Write-Log "Continue? (Y/N)" "YELLOW"
-        
-        $confirmation = Read-Host
-        if ($confirmation -ne 'Y' -and $confirmation -ne 'y') {
-            Write-Log "Unregistration cancelled by user" "WARNING"
-            exit 0
-        }
-    }
-    
-    Write-Host ""
-    
-    # =================================================================
-    # Unregister Apache Service
-    # =================================================================
-    if ($apacheExists) {
-        Write-Log "============================================" "CYAN"
-        Write-Log "    Unregistering Apache Service" "CYAN"
-        Write-Log "============================================" "CYAN"
-        Write-Host ""
-        
-        # Stop the service first
-        $stopped = Stop-ServiceSafe $apacheServiceName
-        
-        if (!$stopped -and !$Force) {
-            Write-Log "[ERROR] Cannot unregister service while it's running. Use -Force to override." "ERROR"
-        } else {
-            # Get Apache paths
-            $apacheExe = Join-Path $isotonePath "apache24\bin\httpd.exe"
-            
-            # Try Apache's own uninstall method first
-            if (Test-Path $apacheExe) {
-                Write-Log "Uninstalling Apache service using httpd.exe..." "INFO"
-                Push-Location (Join-Path $isotonePath "apache24\bin")
-                
-                try {
-                    $result = & .\httpd.exe -k uninstall -n $apacheServiceName 2>&1 | Out-String
-                    Write-Log "Apache uninstall output:" "DEBUG" -NoConsole
-                    Write-Log $result "DEBUG"
-                } catch {
-                    Write-Log "Apache uninstall command failed: $_" "WARNING"
-                } finally {
-                    Pop-Location
-                }
-            }
-            
-            # Use sc.exe to ensure removal
-            if (Test-ServiceExists $apacheServiceName) {
-                Write-Log "Removing service using sc.exe..." "INFO"
-                sc.exe delete $apacheServiceName | Out-Null
-                Start-Sleep -Seconds 2
-            }
-            
-            # Verify removal
-            if (!(Test-ServiceExists $apacheServiceName)) {
-                Write-Log "[OK] Apache service unregistered successfully" "SUCCESS"
-            } else {
-                Write-Log "[ERROR] Failed to unregister Apache service" "ERROR"
-                Write-Log "Try running: sc delete $apacheServiceName" "WARNING"
-            }
-        }
-        
-        Write-Host ""
-    }
-    
-    # =================================================================
-    # Unregister MariaDB Service
-    # =================================================================
-    if ($mariadbExists) {
-        Write-Log "============================================" "CYAN"
-        Write-Log "    Unregistering MariaDB Service" "CYAN"
-        Write-Log "============================================" "CYAN"
-        Write-Host ""
-        
-        # Stop the service first
-        $stopped = Stop-ServiceSafe $mariadbServiceName
-        
-        if (!$stopped -and !$Force) {
-            Write-Log "[ERROR] Cannot unregister service while it's running. Use -Force to override." "ERROR"
-        } else {
-            # Find MariaDB executable
-            $mariadbBin = Join-Path $isotonePath "mariadb\bin"
-            $mariadbExe = $null
-            
-            if (Test-Path (Join-Path $mariadbBin "mariadbd.exe")) {
-                $mariadbExe = Join-Path $mariadbBin "mariadbd.exe"
-            } elseif (Test-Path (Join-Path $mariadbBin "mysqld.exe")) {
-                $mariadbExe = Join-Path $mariadbBin "mysqld.exe"
-            }
-            
-            # Try MariaDB's own removal method first
-            if ($mariadbExe -and (Test-Path $mariadbExe)) {
-                Write-Log "Uninstalling MariaDB service using MariaDB executable..." "INFO"
-                try {
-                    $result = & $mariadbExe --remove $mariadbServiceName 2>&1 | Out-String
-                    Write-Log "MariaDB uninstall output:" "DEBUG" -NoConsole
-                    Write-Log $result "DEBUG"
-                } catch {
-                    Write-Log "MariaDB uninstall command failed: $_" "WARNING"
-                }
-            }
-            
-            # Use sc.exe to ensure removal
-            if (Test-ServiceExists $mariadbServiceName) {
-                Write-Log "Removing service using sc.exe..." "INFO"
-                sc.exe delete $mariadbServiceName | Out-Null
-                Start-Sleep -Seconds 2
-            }
-            
-            # Verify removal
-            if (!(Test-ServiceExists $mariadbServiceName)) {
-                Write-Log "[OK] MariaDB service unregistered successfully" "SUCCESS"
-            } else {
-                Write-Log "[ERROR] Failed to unregister MariaDB service" "ERROR"
-                Write-Log "Try running: sc delete $mariadbServiceName" "WARNING"
-            }
-        }
-        
-        Write-Host ""
-    }
-    
-    # =================================================================
-    # Summary
-    # =================================================================
-    Write-Log "============================================" "CYAN"
-    Write-Log "    Unregistration Summary" "CYAN"
-    Write-Log "============================================" "CYAN"
-    Write-Host ""
-    
-    # Check final status
-    $apacheStillExists = Test-ServiceExists $apacheServiceName
-    $mariadbStillExists = Test-ServiceExists $mariadbServiceName
-    
-    if (!$apacheStillExists -and !$mariadbStillExists) {
-        Write-Log "[SUCCESS] All IsotoneStack services have been unregistered" "SUCCESS"
-        Write-Host ""
-        Write-Log "NOTE: All files and data remain intact." "INFO"
-        Write-Log "      Only the Windows service registrations were removed." "INFO"
-    } else {
-        Write-Log "[WARNING] Some services may still be registered:" "WARNING"
-        if ($apacheStillExists) {
-            Write-Log "  - $apacheServiceName still exists" "WARNING"
-        }
-        if ($mariadbStillExists) {
-            Write-Log "  - $mariadbServiceName still exists" "WARNING"
-        }
-        Write-Host ""
-        Write-Log "Manual cleanup commands:" "INFO"
-        if ($apacheStillExists) {
-            Write-Log "  sc delete $apacheServiceName" "DEBUG"
-        }
-        if ($mariadbStillExists) {
-            Write-Log "  sc delete $mariadbServiceName" "DEBUG"
-        }
-    }
-    
-    Write-Host ""
-    Write-Log "Next steps:" "INFO"
-    Write-Log "  - Run Register-Services.ps1 to re-register services" "DEBUG"
-    Write-Log "  - All configuration and data files remain unchanged" "DEBUG"
-    
-    Write-Host ""
-    
-    Write-Log "Service unregistration completed" "SUCCESS"
-    Write-Log "Log file: $logFile" "INFO"
-    
-    
-} catch {
-    Write-Log "FATAL ERROR: $_" "ERROR"
-    Write-Log "Stack Trace: $($_.ScriptStackTrace)" "ERROR"
-    Write-Log "Service unregistration failed with fatal error" "ERROR"
-    Write-Host ""
-    Write-Host "See log file for details: $logFile" -ForegroundColor Red
-    exit 1
-}"
+        Write-Warning "Failed to load settings file: $_"
     }
 }
 
@@ -379,305 +86,15 @@ if ($logToFile -and $archiveOldLogs -and (Test-Path $logFile) -and ((Get-Item $l
     # Clean up old archived logs if cleanup is enabled
     if ($cleanupEnabled) {
         Get-ChildItem -Path $logsPath -Filter "$scriptName`_*.log" | 
-            Where-Object { # Unregister-Services.ps1
-# Unregisters Apache and MariaDB Windows services for IsotoneStack
-# Only removes service registrations - does not delete any files or data
-# Requires Administrator privileges
-
-param(
-    [switch]$Force      # Force stop and removal even if services are running
-,`n    [switch]$Verbose,`n    [switch]$Debug)
-
-#Requires -Version 5.1
-#Requires -RunAsAdministrator
-
-# Get script locations using portable paths
-$scriptPath = $PSScriptRoot
-$isotonePath = Split-Path -Parent $scriptPath
-$logsPath = Join-Path $isotonePath "logs\isotone"
-
-
-
-# Function to check if a service exists
-function Test-ServiceExists {
-    param([string]$ServiceName,`n    [switch]$Verbose,`n    [switch]$Debug)
-    
-    $service = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
-    return $null -ne $service
-}
-
-# Function to stop a service
-function Stop-ServiceSafe {
-    param([string]$ServiceName,`n    [switch]$Verbose,`n    [switch]$Debug)
-    
-    if (Test-ServiceExists $ServiceName) {
-        $service = Get-Service -Name $ServiceName
-        
-        if ($service.Status -eq 'Running') {
-            Write-Log "  Stopping service: $ServiceName" "WARNING"
-            try {
-                Stop-Service -Name $ServiceName -Force -ErrorAction Stop
-                
-                # Wait for service to stop (max 30 seconds)
-                $timeout = 30
-                $waited = 0
-                while ((Get-Service -Name $ServiceName).Status -ne 'Stopped' -and $waited -lt $timeout) {
-                    Start-Sleep -Seconds 1
-                    $waited++
-                }
-                
-                if ((Get-Service -Name $ServiceName).Status -eq 'Stopped') {
-                    Write-Log "  [OK] Service stopped: $ServiceName" "SUCCESS"
-                    return $true
-                } else {
-                    Write-Log "  [WARNING] Service did not stop within timeout: $ServiceName" "WARNING"
-                    return $false
-                }
-            } catch {
-                Write-Log "  [ERROR] Failed to stop service: $_" "ERROR"
-                return $false
-            }
-        } else {
-            Write-Log "  Service already stopped: $ServiceName" "DEBUG"
-            return $true
-        }
-    }
-    return $true
-}
-
-try {
-    # Start logging
-    
-    Write-Log "$scriptName Started (IsotoneStack: $isotonePath)" "INFO" -AlwaysLog
-    
-    Write-Log "Parameters: $($PSBoundParameters | Out-String)" "DEBUG"
-    
-    
-    Write-Host ""
-    Write-Log "=== IsotoneStack Service Unregistration ===" "MAGENTA"
-    Write-Host ""
-    
-    # Check for Administrator privileges (redundant but ensures we're admin)
-    $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = New-Object Security.Principal.WindowsPrincipal($currentUser)
-    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        Write-Log "This script requires Administrator privileges" "ERROR"
-        Write-Log "Please run this script as Administrator" "ERROR"
-        exit 1
-    }
-    Write-Log "[OK] Running with Administrator privileges" "SUCCESS"
-    Write-Host ""
-    
-    # Check what services exist
-    Write-Log "Checking for existing services..." "CYAN"
-    $apacheExists = Test-ServiceExists $apacheServiceName
-    $mariadbExists = Test-ServiceExists $mariadbServiceName
-    
-    if (!$apacheExists -and !$mariadbExists) {
-        Write-Log "No IsotoneStack services found to unregister" "WARNING"
-        Write-Host ""
-        exit 0
-    }
-    
-    if ($apacheExists) {
-        Write-Log "  [FOUND] $apacheServiceName service" "INFO"
-    }
-    if ($mariadbExists) {
-        Write-Log "  [FOUND] $mariadbServiceName service" "INFO"
-    }
-    
-    Write-Host ""
-    
-    # Confirm unregistration unless Force is specified
-    if (!$Force) {
-        Write-Log "This will unregister the following Windows services:" "WARNING"
-        if ($apacheExists) {
-            Write-Log "  - $apacheServiceName" "WARNING"
-        }
-        if ($mariadbExists) {
-            Write-Log "  - $mariadbServiceName" "WARNING"
-        }
-        Write-Host ""
-        Write-Log "NOTE: This only removes the Windows service registrations." "INFO"
-        Write-Log "      No files or data will be deleted." "INFO"
-        Write-Host ""
-        Write-Log "Continue? (Y/N)" "YELLOW"
-        
-        $confirmation = Read-Host
-        if ($confirmation -ne 'Y' -and $confirmation -ne 'y') {
-            Write-Log "Unregistration cancelled by user" "WARNING"
-            exit 0
-        }
-    }
-    
-    Write-Host ""
-    
-    # =================================================================
-    # Unregister Apache Service
-    # =================================================================
-    if ($apacheExists) {
-        Write-Log "============================================" "CYAN"
-        Write-Log "    Unregistering Apache Service" "CYAN"
-        Write-Log "============================================" "CYAN"
-        Write-Host ""
-        
-        # Stop the service first
-        $stopped = Stop-ServiceSafe $apacheServiceName
-        
-        if (!$stopped -and !$Force) {
-            Write-Log "[ERROR] Cannot unregister service while it's running. Use -Force to override." "ERROR"
-        } else {
-            # Get Apache paths
-            $apacheExe = Join-Path $isotonePath "apache24\bin\httpd.exe"
-            
-            # Try Apache's own uninstall method first
-            if (Test-Path $apacheExe) {
-                Write-Log "Uninstalling Apache service using httpd.exe..." "INFO"
-                Push-Location (Join-Path $isotonePath "apache24\bin")
-                
-                try {
-                    $result = & .\httpd.exe -k uninstall -n $apacheServiceName 2>&1 | Out-String
-                    Write-Log "Apache uninstall output:" "DEBUG" -NoConsole
-                    Write-Log $result "DEBUG"
-                } catch {
-                    Write-Log "Apache uninstall command failed: $_" "WARNING"
-                } finally {
-                    Pop-Location
-                }
-            }
-            
-            # Use sc.exe to ensure removal
-            if (Test-ServiceExists $apacheServiceName) {
-                Write-Log "Removing service using sc.exe..." "INFO"
-                sc.exe delete $apacheServiceName | Out-Null
-                Start-Sleep -Seconds 2
-            }
-            
-            # Verify removal
-            if (!(Test-ServiceExists $apacheServiceName)) {
-                Write-Log "[OK] Apache service unregistered successfully" "SUCCESS"
-            } else {
-                Write-Log "[ERROR] Failed to unregister Apache service" "ERROR"
-                Write-Log "Try running: sc delete $apacheServiceName" "WARNING"
-            }
-        }
-        
-        Write-Host ""
-    }
-    
-    # =================================================================
-    # Unregister MariaDB Service
-    # =================================================================
-    if ($mariadbExists) {
-        Write-Log "============================================" "CYAN"
-        Write-Log "    Unregistering MariaDB Service" "CYAN"
-        Write-Log "============================================" "CYAN"
-        Write-Host ""
-        
-        # Stop the service first
-        $stopped = Stop-ServiceSafe $mariadbServiceName
-        
-        if (!$stopped -and !$Force) {
-            Write-Log "[ERROR] Cannot unregister service while it's running. Use -Force to override." "ERROR"
-        } else {
-            # Find MariaDB executable
-            $mariadbBin = Join-Path $isotonePath "mariadb\bin"
-            $mariadbExe = $null
-            
-            if (Test-Path (Join-Path $mariadbBin "mariadbd.exe")) {
-                $mariadbExe = Join-Path $mariadbBin "mariadbd.exe"
-            } elseif (Test-Path (Join-Path $mariadbBin "mysqld.exe")) {
-                $mariadbExe = Join-Path $mariadbBin "mysqld.exe"
-            }
-            
-            # Try MariaDB's own removal method first
-            if ($mariadbExe -and (Test-Path $mariadbExe)) {
-                Write-Log "Uninstalling MariaDB service using MariaDB executable..." "INFO"
-                try {
-                    $result = & $mariadbExe --remove $mariadbServiceName 2>&1 | Out-String
-                    Write-Log "MariaDB uninstall output:" "DEBUG" -NoConsole
-                    Write-Log $result "DEBUG"
-                } catch {
-                    Write-Log "MariaDB uninstall command failed: $_" "WARNING"
-                }
-            }
-            
-            # Use sc.exe to ensure removal
-            if (Test-ServiceExists $mariadbServiceName) {
-                Write-Log "Removing service using sc.exe..." "INFO"
-                sc.exe delete $mariadbServiceName | Out-Null
-                Start-Sleep -Seconds 2
-            }
-            
-            # Verify removal
-            if (!(Test-ServiceExists $mariadbServiceName)) {
-                Write-Log "[OK] MariaDB service unregistered successfully" "SUCCESS"
-            } else {
-                Write-Log "[ERROR] Failed to unregister MariaDB service" "ERROR"
-                Write-Log "Try running: sc delete $mariadbServiceName" "WARNING"
-            }
-        }
-        
-        Write-Host ""
-    }
-    
-    # =================================================================
-    # Summary
-    # =================================================================
-    Write-Log "============================================" "CYAN"
-    Write-Log "    Unregistration Summary" "CYAN"
-    Write-Log "============================================" "CYAN"
-    Write-Host ""
-    
-    # Check final status
-    $apacheStillExists = Test-ServiceExists $apacheServiceName
-    $mariadbStillExists = Test-ServiceExists $mariadbServiceName
-    
-    if (!$apacheStillExists -and !$mariadbStillExists) {
-        Write-Log "[SUCCESS] All IsotoneStack services have been unregistered" "SUCCESS"
-        Write-Host ""
-        Write-Log "NOTE: All files and data remain intact." "INFO"
-        Write-Log "      Only the Windows service registrations were removed." "INFO"
-    } else {
-        Write-Log "[WARNING] Some services may still be registered:" "WARNING"
-        if ($apacheStillExists) {
-            Write-Log "  - $apacheServiceName still exists" "WARNING"
-        }
-        if ($mariadbStillExists) {
-            Write-Log "  - $mariadbServiceName still exists" "WARNING"
-        }
-        Write-Host ""
-        Write-Log "Manual cleanup commands:" "INFO"
-        if ($apacheStillExists) {
-            Write-Log "  sc delete $apacheServiceName" "DEBUG"
-        }
-        if ($mariadbStillExists) {
-            Write-Log "  sc delete $mariadbServiceName" "DEBUG"
-        }
-    }
-    
-    Write-Host ""
-    Write-Log "Next steps:" "INFO"
-    Write-Log "  - Run Register-Services.ps1 to re-register services" "DEBUG"
-    Write-Log "  - All configuration and data files remain unchanged" "DEBUG"
-    
-    Write-Host ""
-    
-    Write-Log "Service unregistration completed" "SUCCESS"
-    Write-Log "Log file: $logFile" "INFO"
-    
-    
-} catch {
-    Write-Log "FATAL ERROR: $_" "ERROR"
-    Write-Log "Stack Trace: $($_.ScriptStackTrace)" "ERROR"
-    Write-Log "Service unregistration failed with fatal error" "ERROR"
-    Write-Host ""
-    Write-Host "See log file for details: $logFile" -ForegroundColor Red
-    exit 1
-}.LastWriteTime -lt (Get-Date).AddDays(-$maxLogAge) } | 
+            Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-$maxLogAge) } | 
             Remove-Item -Force
     }
 }
+
+# Service names
+$apacheServiceName = "IsotoneApache"
+$mariadbServiceName = "IsotoneMariaDB"
+$mailpitServiceName = "IsotoneMailpit"
 
 # Define log level priorities
 $logLevels = @{
@@ -748,11 +165,9 @@ function Write-Log {
     }
 }
 
-
-
 # Function to check if a service exists
 function Test-ServiceExists {
-    param([string]$ServiceName,`n    [switch]$Verbose,`n    [switch]$Debug)
+    param([string]$ServiceName)
     
     $service = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
     return $null -ne $service
@@ -760,7 +175,7 @@ function Test-ServiceExists {
 
 # Function to stop a service
 function Stop-ServiceSafe {
-    param([string]$ServiceName,`n    [switch]$Verbose,`n    [switch]$Debug)
+    param([string]$ServiceName)
     
     if (Test-ServiceExists $ServiceName) {
         $service = Get-Service -Name $ServiceName
@@ -798,12 +213,11 @@ function Stop-ServiceSafe {
 }
 
 try {
-    # Start logging
-    
-    Write-Log "$scriptName Started (IsotoneStack: $isotonePath)" "INFO" -AlwaysLog
-    
-    Write-Log "Parameters: $($PSBoundParameters | Out-String)" "DEBUG"
-    
+    # Start logging (only log start/end and important events)
+    Write-Log "IsotoneStack Service Unregistration Started (IsotoneStack: $isotonePath)" "INFO" -AlwaysLog
+    if ($Verbose) {
+        Write-Log "Parameters: Force=$Force, Verbose=$Verbose" "DEBUG"
+    }
     
     Write-Host ""
     Write-Log "=== IsotoneStack Service Unregistration ===" "MAGENTA"
@@ -824,8 +238,9 @@ try {
     Write-Log "Checking for existing services..." "CYAN"
     $apacheExists = Test-ServiceExists $apacheServiceName
     $mariadbExists = Test-ServiceExists $mariadbServiceName
+    $mailpitExists = Test-ServiceExists $mailpitServiceName
     
-    if (!$apacheExists -and !$mariadbExists) {
+    if (!$apacheExists -and !$mariadbExists -and !$mailpitExists) {
         Write-Log "No IsotoneStack services found to unregister" "WARNING"
         Write-Host ""
         exit 0
@@ -836,6 +251,9 @@ try {
     }
     if ($mariadbExists) {
         Write-Log "  [FOUND] $mariadbServiceName service" "INFO"
+    }
+    if ($mailpitExists) {
+        Write-Log "  [FOUND] $mailpitServiceName service" "INFO"
     }
     
     Write-Host ""
@@ -848,6 +266,9 @@ try {
         }
         if ($mariadbExists) {
             Write-Log "  - $mariadbServiceName" "WARNING"
+        }
+        if ($mailpitExists) {
+            Write-Log "  - $mailpitServiceName" "WARNING"
         }
         Write-Host ""
         Write-Log "NOTE: This only removes the Windows service registrations." "INFO"
@@ -974,6 +395,53 @@ try {
     }
     
     # =================================================================
+    # Unregister Mailpit Service
+    # =================================================================
+    if ($mailpitExists) {
+        Write-Log "============================================" "CYAN"
+        Write-Log "    Unregistering Mailpit Service" "CYAN"
+        Write-Log "============================================" "CYAN"
+        Write-Host ""
+        
+        # Stop the service first
+        $stopped = Stop-ServiceSafe $mailpitServiceName
+        
+        if (!$stopped -and !$Force) {
+            Write-Log "[ERROR] Cannot unregister service while it's running. Use -Force to override." "ERROR"
+        } else {
+            # Try using NSSM if available
+            $nssmPath = Join-Path $isotonePath "bin\nssm.exe"
+            if (Test-Path $nssmPath) {
+                Write-Log "Uninstalling Mailpit service using NSSM..." "INFO"
+                try {
+                    $result = & $nssmPath remove $mailpitServiceName confirm 2>&1 | Out-String
+                    Write-Log "Mailpit uninstall output:" "DEBUG" -NoConsole
+                    Write-Log $result "DEBUG"
+                } catch {
+                    Write-Log "NSSM uninstall command failed: $_" "WARNING"
+                }
+            }
+            
+            # Use sc.exe to ensure removal
+            if (Test-ServiceExists $mailpitServiceName) {
+                Write-Log "Removing service using sc.exe..." "INFO"
+                sc.exe delete $mailpitServiceName | Out-Null
+                Start-Sleep -Seconds 2
+            }
+            
+            # Verify removal
+            if (!(Test-ServiceExists $mailpitServiceName)) {
+                Write-Log "[OK] Mailpit service unregistered successfully" "SUCCESS"
+            } else {
+                Write-Log "[ERROR] Failed to unregister Mailpit service" "ERROR"
+                Write-Log "Try running: sc delete $mailpitServiceName" "WARNING"
+            }
+        }
+        
+        Write-Host ""
+    }
+    
+    # =================================================================
     # Summary
     # =================================================================
     Write-Log "============================================" "CYAN"
@@ -984,8 +452,9 @@ try {
     # Check final status
     $apacheStillExists = Test-ServiceExists $apacheServiceName
     $mariadbStillExists = Test-ServiceExists $mariadbServiceName
+    $mailpitStillExists = Test-ServiceExists $mailpitServiceName
     
-    if (!$apacheStillExists -and !$mariadbStillExists) {
+    if (!$apacheStillExists -and !$mariadbStillExists -and !$mailpitStillExists) {
         Write-Log "[SUCCESS] All IsotoneStack services have been unregistered" "SUCCESS"
         Write-Host ""
         Write-Log "NOTE: All files and data remain intact." "INFO"
@@ -998,6 +467,9 @@ try {
         if ($mariadbStillExists) {
             Write-Log "  - $mariadbServiceName still exists" "WARNING"
         }
+        if ($mailpitStillExists) {
+            Write-Log "  - $mailpitServiceName still exists" "WARNING"
+        }
         Write-Host ""
         Write-Log "Manual cleanup commands:" "INFO"
         if ($apacheStillExists) {
@@ -1005,6 +477,9 @@ try {
         }
         if ($mariadbStillExists) {
             Write-Log "  sc delete $mariadbServiceName" "DEBUG"
+        }
+        if ($mailpitStillExists) {
+            Write-Log "  sc delete $mailpitServiceName" "DEBUG"
         }
     }
     
@@ -1014,10 +489,10 @@ try {
     Write-Log "  - All configuration and data files remain unchanged" "DEBUG"
     
     Write-Host ""
-    
-    Write-Log "Service unregistration completed" "SUCCESS"
-    Write-Log "Log file: $logFile" "INFO"
-    
+    Write-Log "Service unregistration completed successfully" "SUCCESS" -AlwaysLog
+    if ($Verbose) {
+        Write-Log "Log file: $logFile" "DEBUG"
+    }
     
 } catch {
     Write-Log "FATAL ERROR: $_" "ERROR"
@@ -1026,4 +501,12 @@ try {
     Write-Host ""
     Write-Host "See log file for details: $logFile" -ForegroundColor Red
     exit 1
+}
+finally {
+    # Clean up old logs on script completion (runs even if script fails) - only if cleanup is enabled
+    if ($cleanupEnabled -and (Test-Path $logsPath)) {
+        Get-ChildItem -Path $logsPath -Filter "*.log" | 
+            Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-$maxLogAge) } | 
+            Remove-Item -Force -ErrorAction SilentlyContinue
+    }
 }

@@ -1,7 +1,8 @@
 ### PowerShell Script Rules
 - ✅ All PowerShell scripts must use portable PowerShell from `.\pwsh\pwsh.exe`
-- ✅ All scripts (.ps1 and .bat) go in `.\scripts\` folder unless explicitly requested in root
-- ✅ Each `.ps1` script needs a matching `.bat` launcher with same name
+- ✅ Core service scripts (Register/Start/Stop/Unregister-Services, Configure-IsotoneStack, etc.) go in `.\scripts\` root folder
+- ✅ Component-specific scripts go in subdirectories: `.\scripts\phpmyadmin\`, `.\scripts\apache\`, `.\scripts\mariadb\`, etc.
+- ✅ Each `.ps1` script needs a matching `.bat` launcher with same name in the same directory
 - ✅ Use `.\scripts\_Template.ps1` as base for all new PowerShell scripts
 - ✅ Use `.\scripts\_Template.bat` as base for all new batch launchers
 - ✅ Batch launchers must self-elevate when admin required
@@ -23,7 +24,10 @@
 - `pwsh/` - Bundled PowerShell 7
 - `bin/` - Essential tools (wget, 7-zip)
 - `config/` - Configuration templates for each component
-- `scripts/` - All PowerShell and batch scripts
+- `scripts/` - PowerShell and batch scripts (core scripts in root, component-specific in subdirectories)
+  - `phpmyadmin/` - phpMyAdmin-specific scripts
+  - `apache/` - Apache-specific scripts
+  - `mariadb/` - MariaDB-specific scripts
 - `logs/isotone/` - All script logs with timestamps
 - `licenses/` - Open source licenses for all components
 - `www/` - Web root directory (USER CONTENT - COMPLETELY IGNORE THIS FOLDER)
@@ -32,6 +36,7 @@
 ### Never Do These
 - ❌ NEVER create, edit, modify, delete, search, read, or access ANY files in the `www/` folder - completely ignore this directory
 - ❌ When using Grep, Glob, LS, or any search tools, ALWAYS exclude the `www/` folder from searches
+- ❌ NEVER create scripts that automatically update/modify code - always update files manually to prevent corruption
 - ❌ Don't hardcode paths (use relative paths from script location)
 - ❌ Don't use system PowerShell - use `.\pwsh\pwsh.exe`
 - ❌ Don't modify Windows registry (except for auto-start)
@@ -42,6 +47,12 @@
 - ❌ Never remove configuration files from bundled components - IsotoneStack modifies configs in place like XAMPP
 - ❌ Don't create download scripts - everything is bundled
 - ❌ Never enable mod_headers (#LoadModule headers_module) in Apache - it causes issues
+
+### Apache Configuration Rules
+- ❌ NEVER add PHP handling directives (`<FilesMatch>`, `SetHandler`) in individual Directory blocks - PHP is already configured globally
+- ❌ NEVER add `DirectoryIndex` directives in individual Directory blocks - it's already set globally in httpd.conf
+- ✅ Keep Apache alias configurations minimal - only include Alias, Directory block with permissions (Options, AllowOverride, Require)
+- ✅ Apache alias files should only contain: Alias directive, Directory block with Options/AllowOverride/Require directives
 
 ### Always Do These
 - ✅ Check for Administrator privileges when needed

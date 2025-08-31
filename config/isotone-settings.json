@@ -3,7 +3,7 @@
         "defaultLogLevel": "INFO",
         "maxLogSizeMB": 10,
         "maxLogAgeDays": 30,
-        "verbose": false,
+        "verbose": true,
         "cleanupEnabled": true,
         "logToFile": true,
         "logToConsole": true,
