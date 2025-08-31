@@ -15,31 +15,10 @@ if %errorlevel% neq 0 (
 ### Script Language Selection
 - ✅ Choose the best scripting language for each specific task:
   - **PowerShell (.ps1)**: Windows service management, registry operations, system configuration, Windows-specific tasks
-  - **Python (.py)**: Cross-platform tools, complex logic, data processing, web operations, file manipulation
   - **Batch (.bat)**: Simple launchers, basic file operations, environment setup
+  - **C# (.cs)**: Control Panel application, complex GUI applications, performance-critical tools
 - ✅ Consider maintainability and readability when choosing the language
 - ✅ Use existing scripts in the codebase as reference for similar tasks
-
-### Python Script Rules
-- ✅ ALL Python scripts go in `.\scripts\python\` directory
-- ✅ Common modules and utilities go in `.\scripts\python\includes\`
-- ✅ The IsotoneLogger class is in `.\scripts\python\includes\isotone_logger.py`
-- ✅ All Python scripts must use embedded Python from `.\python\python.exe` first, fall back to system Python only if not available
-- ✅ Each `.py` script needs a matching `.bat` launcher with same name in the same directory (e.g., Install-Dependencies.py → Install-Dependencies.bat)
-- ✅ Use `.\scripts\python\_Template.py` as base for all new Python scripts
-- ✅ Use `.\scripts\python\_Template.py.bat` as base for all Python batch launchers
-- ✅ Batch launchers must check for embedded Python first, then fall back to system Python
-- ✅ Use `Path(__file__).resolve()` for script path, `.parent` for script directory
-- ✅ Use `SCRIPT_DIR.parent.parent` for isotone root path (since scripts are in scripts/python)
-- ✅ Import logger with: `from isotone_logger import IsotoneLogger` (after adding includes to sys.path)
-- ✅ Never hardcode paths - always derive from script location using pathlib
-- ✅ Use only ASCII characters in output - no Unicode symbols, emojis, or special characters (no ✓, ⚠, ✗, etc.)
-- ✅ For checkmarks use [OK], for warnings use [WARNING], for errors use [ERROR]
-- ✅ All Python scripts must log to `logs\isotone` with dated files using the IsotoneLogger class
-- ✅ Use the logger.log() method for both console and file output
-- ✅ Only show warnings/errors/success to console by default, use -v/--verbose for debug output
-- ✅ All scripts should use argparse for command-line arguments
-- ✅ Scripts should return proper exit codes (0 for success, non-zero for failure)
 
 ### PowerShell Script Rules
 - ✅ PowerShell scripts (.ps1) go in `.\scripts\` root folder
@@ -59,7 +38,6 @@ if %errorlevel% neq 0 (
 ### Project Structure
 - `apache24/` - Bundled Apache HTTP Server
 - `php/` - Bundled PHP runtime
-- `python/` - Bundled Python runtime (embedded package for all scripts)
 - `mariadb/` - Bundled MariaDB database
 - `phpmyadmin/` - Bundled phpMyAdmin
 - `mailpit/` - Bundled Mailpit email testing server
@@ -69,12 +47,7 @@ if %errorlevel% neq 0 (
 - `scripts/` - PowerShell scripts and batch launchers
   - `_Template.ps1` - Template for new PowerShell scripts
   - `_Template.ps1.bat` - Template for PowerShell batch launchers
-  - `python/` - All Python scripts
-    - `_Template.py` - Template for new Python scripts
-    - `_Template.py.bat` - Template for Python batch launchers
-    - `includes/` - Common Python modules and utilities
-      - `isotone_logger.py` - Logging utility class
-- `control-panel/` - Control Panel application with its own scripts
+- `control-panel/` - Control Panel application (C# WPF/WinForms)
 - `logs/isotone/` - All script logs with timestamps
 - `licenses/` - Open source licenses for all components
 - `www/` - Web root directory (USER CONTENT - COMPLETELY IGNORE THIS FOLDER)
@@ -85,7 +58,6 @@ if %errorlevel% neq 0 (
 - ❌ When using Grep, Glob, LS, or any search tools, ALWAYS exclude the `www/` folder from searches
 - ❌ NEVER create scripts that automatically update/modify code - always update files manually to prevent corruption
 - ❌ Don't hardcode paths (use relative paths from script location)
-- ❌ Don't use system Python as first choice - always check for `.\python\python.exe` first
 - ❌ Don't modify Windows registry (except for auto-start)
 - ❌ Don't use deprecated PHP/Apache features
 - ❌ Don't commit binary files to git
