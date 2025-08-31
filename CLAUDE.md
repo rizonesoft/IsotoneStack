@@ -1,33 +1,80 @@
-### PowerShell Script Rules
-- ✅ All PowerShell scripts must use portable PowerShell from `.\pwsh\pwsh.exe`
-- ✅ Core service scripts (Register/Start/Stop/Unregister-Services, Configure-IsotoneStack, etc.) go in `.\scripts\` root folder
-- ✅ Component-specific scripts go in subdirectories: `.\scripts\phpmyadmin\`, `.\scripts\apache\`, `.\scripts\mariadb\`, etc.
-- ✅ Each `.ps1` script needs a matching `.bat` launcher with same name in the same directory
-- ✅ Use `.\scripts\_Template.ps1` as base for all new PowerShell scripts
-- ✅ Use `.\scripts\_Template.bat` as base for all new batch launchers
-- ✅ Batch launchers must self-elevate when admin required
-- ✅ Use `$PSScriptRoot` for script-relative paths
-- ✅ Use `Split-Path -Parent $PSScriptRoot` for isotone root path
-- ✅ Never hardcode paths - always derive from script location
-- ✅ Use only ASCII characters - no Unicode symbols, emojis, or special characters (no ✓, ⚠, ✗, etc.)
+### Batch File Self-Elevation Pattern
+When a batch file needs Administrator privileges (for services, registry, system changes):
+```batch
+REM Check for Administrator privileges
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Requesting Administrator privileges...
+    powershell -Command "Start-Process '%~f0' -Verb RunAs -WorkingDirectory '%~dp0'"
+    exit /b
+)
+```
+- ✅ Add self-elevation to: Service control scripts, Control Panel launcher, System configuration scripts
+- ✅ Don't add to: Read-only scripts, dependency installers (unless installing system-wide)
+
+### Script Language Selection
+- ✅ Choose the best scripting language for each specific task:
+  - **PowerShell (.ps1)**: Windows service management, registry operations, system configuration, Windows-specific tasks
+  - **Python (.py)**: Cross-platform tools, complex logic, data processing, web operations, file manipulation
+  - **Batch (.bat)**: Simple launchers, basic file operations, environment setup
+- ✅ Consider maintainability and readability when choosing the language
+- ✅ Use existing scripts in the codebase as reference for similar tasks
+
+### Python Script Rules
+- ✅ ALL Python scripts go in `.\scripts\python\` directory
+- ✅ Common modules and utilities go in `.\scripts\python\includes\`
+- ✅ The IsotoneLogger class is in `.\scripts\python\includes\isotone_logger.py`
+- ✅ All Python scripts must use embedded Python from `.\python\python.exe` first, fall back to system Python only if not available
+- ✅ Each `.py` script needs a matching `.bat` launcher with same name in the same directory (e.g., Install-Dependencies.py → Install-Dependencies.bat)
+- ✅ Use `.\scripts\python\_Template.py` as base for all new Python scripts
+- ✅ Use `.\scripts\python\_Template.py.bat` as base for all Python batch launchers
+- ✅ Batch launchers must check for embedded Python first, then fall back to system Python
+- ✅ Use `Path(__file__).resolve()` for script path, `.parent` for script directory
+- ✅ Use `SCRIPT_DIR.parent.parent` for isotone root path (since scripts are in scripts/python)
+- ✅ Import logger with: `from isotone_logger import IsotoneLogger` (after adding includes to sys.path)
+- ✅ Never hardcode paths - always derive from script location using pathlib
+- ✅ Use only ASCII characters in output - no Unicode symbols, emojis, or special characters (no ✓, ⚠, ✗, etc.)
 - ✅ For checkmarks use [OK], for warnings use [WARNING], for errors use [ERROR]
-- ✅ All PowerShell scripts must log to `logs\isotone` with timestamped files
-- ✅ Use Write-Log function for both console and file output
-- ✅ Batch files should be simple launchers - no logging needed
-- ✅ Only show warnings/errors to console when something is wrong
+- ✅ All Python scripts must log to `logs\isotone` with dated files using the IsotoneLogger class
+- ✅ Use the logger.log() method for both console and file output
+- ✅ Only show warnings/errors/success to console by default, use -v/--verbose for debug output
+- ✅ All scripts should use argparse for command-line arguments
+- ✅ Scripts should return proper exit codes (0 for success, non-zero for failure)
+
+### PowerShell Script Rules
+- ✅ PowerShell scripts (.ps1) go in `.\scripts\` root folder
+- ✅ PowerShell scripts use portable PowerShell from `.\pwsh\pwsh.exe` first, fall back to system PowerShell
+- ✅ Each `.ps1` script needs a matching `.bat` launcher with same name in the same directory (e.g., Register-Services.ps1 → Register-Services.bat)
+- ✅ Use `.\scripts\_Template.ps1` as base for all new PowerShell scripts
+- ✅ Use `.\scripts\_Template.ps1.bat` as base for all PowerShell batch launchers
+- ✅ Use `$PSScriptRoot` for script directory, `Split-Path -Parent $PSScriptRoot` for isotone root
+- ✅ Never hardcode paths - always derive from script location
+- ✅ Use only ASCII characters in output - no Unicode symbols, emojis, or special characters
+- ✅ For checkmarks use [OK], for warnings use [WARNING], for errors use [ERROR]
+- ✅ All PowerShell scripts must log to `logs\isotone` with proper log rotation
+- ✅ Support common parameters: -Verbose, -Debug, -Force where applicable
+- ✅ Scripts should return proper exit codes (0 for success, non-zero for failure)
+- ✅ Use approved verbs for function names (Get-, Set-, Start-, Stop-, etc.)
 
 ### Project Structure
 - `apache24/` - Bundled Apache HTTP Server
 - `php/` - Bundled PHP runtime
+- `python/` - Bundled Python runtime (embedded package for all scripts)
 - `mariadb/` - Bundled MariaDB database
 - `phpmyadmin/` - Bundled phpMyAdmin
+- `mailpit/` - Bundled Mailpit email testing server
 - `pwsh/` - Bundled PowerShell 7
 - `bin/` - Essential tools (wget, 7-zip)
 - `config/` - Configuration templates for each component
-- `scripts/` - PowerShell and batch scripts (core scripts in root, component-specific in subdirectories)
-  - `phpmyadmin/` - phpMyAdmin-specific scripts
-  - `apache/` - Apache-specific scripts
-  - `mariadb/` - MariaDB-specific scripts
+- `scripts/` - PowerShell scripts and batch launchers
+  - `_Template.ps1` - Template for new PowerShell scripts
+  - `_Template.ps1.bat` - Template for PowerShell batch launchers
+  - `python/` - All Python scripts
+    - `_Template.py` - Template for new Python scripts
+    - `_Template.py.bat` - Template for Python batch launchers
+    - `includes/` - Common Python modules and utilities
+      - `isotone_logger.py` - Logging utility class
+- `control-panel/` - Control Panel application with its own scripts
 - `logs/isotone/` - All script logs with timestamps
 - `licenses/` - Open source licenses for all components
 - `www/` - Web root directory (USER CONTENT - COMPLETELY IGNORE THIS FOLDER)
@@ -38,7 +85,7 @@
 - ❌ When using Grep, Glob, LS, or any search tools, ALWAYS exclude the `www/` folder from searches
 - ❌ NEVER create scripts that automatically update/modify code - always update files manually to prevent corruption
 - ❌ Don't hardcode paths (use relative paths from script location)
-- ❌ Don't use system PowerShell - use `.\pwsh\pwsh.exe`
+- ❌ Don't use system Python as first choice - always check for `.\python\python.exe` first
 - ❌ Don't modify Windows registry (except for auto-start)
 - ❌ Don't use deprecated PHP/Apache features
 - ❌ Don't commit binary files to git
@@ -56,6 +103,7 @@
 
 ### Always Do These
 - ✅ Check for Administrator privileges when needed
+- ✅ Self-elevate batch files that need admin rights (services, system changes)
 - ✅ Use relative paths within isotone directory
 - ✅ Handle Windows path separators (`\` vs `/`)
 - ✅ Include error handling and comprehensive logging

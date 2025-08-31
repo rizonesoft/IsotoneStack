@@ -31,6 +31,7 @@
 /mariadb_imports
 /php
 /phpmyadmin
+/python
 /pwsh
 /bin
 
@@ -64,7 +65,11 @@
 /control-panel/venv/
 /control-panel/__pycache__/
 /control-panel/**/__pycache__/
+/control-panel/build
+/control-panel/dist
 *.pyc
+
+/scripts/__pycache__/
 
 # =====================================
 # User configuration - Created after setup

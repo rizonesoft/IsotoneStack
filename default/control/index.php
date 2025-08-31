@@ -12,12 +12,34 @@ $authenticated = isset($_SESSION['authenticated']) && $_SESSION['authenticated']
 // Handle login
 if (isset($_POST['login'])) {
     $password = $_POST['password'] ?? '';
-    // Default password - CHANGE THIS!
-    if ($password === 'isotone') {
-        $_SESSION['authenticated'] = true;
-        $authenticated = true;
+    
+    // Load config
+    $isotonePath = dirname(dirname(dirname(__FILE__)));
+    $configFile = $isotonePath . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'control-panel.json';
+    
+    if (file_exists($configFile)) {
+        $config = json_decode(file_get_contents($configFile), true);
+        $passwordHash = $config['password_hash'] ?? null;
+        $plainPassword = $config['password'] ?? 'isotone';
+        
+        // Check password
+        if ($passwordHash && password_verify($password, $passwordHash)) {
+            $_SESSION['authenticated'] = true;
+            $authenticated = true;
+        } elseif (!$passwordHash && $password === $plainPassword) {
+            $_SESSION['authenticated'] = true;
+            $authenticated = true;
+        } else {
+            $error = 'Invalid password';
+        }
     } else {
-        $error = 'Invalid password';
+        // Default password
+        if ($password === 'isotone') {
+            $_SESSION['authenticated'] = true;
+            $authenticated = true;
+        } else {
+            $error = 'Invalid password';
+        }
     }
 }
 
@@ -125,6 +147,13 @@ if (!$authenticated) {
                     Services
                 </a>
                 
+                <a href="?page=scripts" class="sidebar-item block px-4 py-3 text-gray-700 <?php echo $page === 'scripts' ? 'active' : ''; ?>">
+                    <svg class="inline w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Scripts
+                </a>
+                
                 <a href="?page=databases" class="sidebar-item block px-4 py-3 text-gray-700 <?php echo $page === 'databases' ? 'active' : ''; ?>">
                     <svg class="inline w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
@@ -203,6 +232,9 @@ if (!$authenticated) {
                         break;
                     case 'services':
                         include 'pages/services.php';
+                        break;
+                    case 'scripts':
+                        include 'pages/scripts.php';
                         break;
                     case 'databases':
                         include 'pages/databases.php';

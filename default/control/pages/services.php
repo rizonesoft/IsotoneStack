@@ -4,6 +4,75 @@
  * Uses PowerShell scripts for service management
  */
 
+// Handle service actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && isset($_POST['service'])) {
+    $action = $_POST['action'];
+    $service = $_POST['service'];
+    
+    // Get IsotoneStack root path
+    $isotonePath = dirname(dirname(dirname(dirname(__FILE__))));
+    $scriptsPath = $isotonePath . DIRECTORY_SEPARATOR . 'scripts';
+    
+    // Security: Validate service name
+    $validServices = ['IsotoneApache', 'IsotoneMariaDB', 'IsotoneMailpit', 'all'];
+    if (!in_array($service, $validServices)) {
+        $error = "Invalid service name";
+    } else {
+        // Execute appropriate PowerShell script
+        switch ($action) {
+            case 'start':
+                if ($service === 'all') {
+                    $command = "powershell.exe -ExecutionPolicy Bypass -File \"$scriptsPath\\Start-Services.ps1\" 2>&1";
+                } else {
+                    $command = "net start $service 2>&1";
+                }
+                break;
+                
+            case 'stop':
+                if ($service === 'all') {
+                    $command = "powershell.exe -ExecutionPolicy Bypass -File \"$scriptsPath\\Stop-Services.ps1\" 2>&1";
+                } else {
+                    $command = "net stop $service 2>&1";
+                }
+                break;
+                
+            case 'restart':
+                if ($service === 'all') {
+                    // Stop then start all services
+                    $command = "powershell.exe -ExecutionPolicy Bypass -File \"$scriptsPath\\Stop-Services.ps1\" && powershell.exe -ExecutionPolicy Bypass -File \"$scriptsPath\\Start-Services.ps1\" 2>&1";
+                } else if ($service === 'IsotoneApache') {
+                    // Use the Restart-Apache script if it exists
+                    if (file_exists("$scriptsPath\\Restart-Apache.ps1")) {
+                        $command = "powershell.exe -ExecutionPolicy Bypass -File \"$scriptsPath\\Restart-Apache.ps1\" 2>&1";
+                    } else {
+                        $command = "net stop $service && net start $service 2>&1";
+                    }
+                } else {
+                    $command = "net stop $service && net start $service 2>&1";
+                }
+                break;
+                
+            default:
+                $error = "Invalid action";
+        }
+        
+        if (!isset($error)) {
+            // Execute command
+            $output = shell_exec($command);
+            
+            // Check if successful
+            if (strpos($output, 'successfully') !== false || strpos($output, 'started') !== false) {
+                $success = ucfirst($action) . " operation completed for " . ($service === 'all' ? 'all services' : $service);
+            } else {
+                $error = "Operation failed. Output: " . substr($output, 0, 200);
+            }
+            
+            // Wait a moment for service status to update
+            sleep(2);
+        }
+    }
+}
+
 // Service definitions
 $services = [
     [
@@ -37,6 +106,20 @@ $services = [
 ?>
 
 <h1 class="text-3xl font-bold text-gray-900 mb-8">Service Management</h1>
+
+<?php if (isset($success)): ?>
+<div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+    <strong class="font-bold">Success!</strong>
+    <span class="block sm:inline"><?php echo htmlspecialchars($success); ?></span>
+</div>
+<?php endif; ?>
+
+<?php if (isset($error)): ?>
+<div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+    <strong class="font-bold">Error!</strong>
+    <span class="block sm:inline"><?php echo htmlspecialchars($error); ?></span>
+</div>
+<?php endif; ?>
 
 <!-- Service Controls -->
 <div class="mb-6 bg-white rounded-lg shadow p-4">

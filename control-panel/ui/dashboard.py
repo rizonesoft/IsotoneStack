@@ -8,6 +8,8 @@ from typing import Dict, Any
 import psutil
 import threading
 import time
+import subprocess
+import os
 from datetime import datetime, timedelta
 
 class Dashboard:
@@ -86,7 +88,7 @@ class Dashboard:
         services = [
             ("Apache", "apache"),
             ("MariaDB", "mariadb"),
-            ("PHP-FPM", "php")
+            ("Mailpit", "mailpit")
         ]
         
         for i, (name, service_id) in enumerate(services):
@@ -259,13 +261,15 @@ class Dashboard:
             ("Uptime", "0h 0m", "uptime"),
             ("Total Requests", "0", "requests"),
             ("Active Connections", "0", "connections"),
-            ("Database Size", "0 MB", "db_size")
+            ("Database Size", "0 MB", "db_size"),
+            ("PHP Version", "Checking...", "php_version"),
+            ("PHP Memory Limit", "Checking...", "php_memory")
         ]
         
         for i, (label, value, stat_id) in enumerate(stats):
             stat_widget = self._create_stat_widget(stats_frame, label, value, stat_id)
-            stat_widget.grid(row=i//2, column=i%2, padx=10, pady=5, sticky="ew")
-            stats_frame.grid_columnconfigure(i%2, weight=1)
+            stat_widget.grid(row=i//3, column=i%3, padx=10, pady=5, sticky="ew")
+            stats_frame.grid_columnconfigure(i%3, weight=1)
     
     def _create_stat_widget(self, parent, label: str, value: str, stat_id: str):
         """Create a statistics widget"""
@@ -351,7 +355,12 @@ class Dashboard:
         monitor_thread.start()
     
     def _update_resource_meter(self, resource_id: str, value: float):
-        """Update a resource meter"""
+        """Update a resource meter (thread-safe)"""
+        # Schedule update in main thread
+        self.parent.after(0, self._update_resource_meter_impl, resource_id, value)
+    
+    def _update_resource_meter_impl(self, resource_id: str, value: float):
+        """Implementation of resource meter update (runs in main thread)"""
         if resource_id in self.resource_monitors:
             monitor = self.resource_monitors[resource_id]
             monitor["progress"].set(value / 100)
@@ -366,7 +375,12 @@ class Dashboard:
                 monitor["label"].configure(text_color="green")
     
     def update_service_status(self, service_id: str, status: str):
-        """Update service status indicator"""
+        """Update service status indicator (thread-safe)"""
+        # Schedule update in main thread
+        self.parent.after(0, self._update_service_status_impl, service_id, status)
+    
+    def _update_service_status_impl(self, service_id: str, status: str):
+        """Implementation of service status update (runs in main thread)"""
         if service_id in self.service_status:
             service = self.service_status[service_id]
             
@@ -386,8 +400,15 @@ class Dashboard:
     
     def _control_service(self, service_id: str, action: str):
         """Control a service (start/stop)"""
-        # This will be implemented with actual service control
-        self.logger.info(f"{action.capitalize()}ing {service_id}...")
+        # Special case for 'stop' to avoid 'Stoping'
+        if action == "stop":
+            self.logger.info(f"Stopping {service_id}...")
+        else:
+            self.logger.info(f"{action.capitalize()}ing {service_id}...")
+        
+        # Delegate to the service panel which has the actual implementation
+        if hasattr(self, 'service_panel'):
+            self.service_panel._control_service(service_id, action)
     
     def _start_all(self):
         """Start all services"""
@@ -419,6 +440,56 @@ class Dashboard:
     def show(self):
         """Show the dashboard"""
         self.frame.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
+        self._update_php_info()
+    
+    def _update_php_info(self):
+        """Update PHP information in stats"""
+        def get_php_info():
+            try:
+                # Get PHP version
+                php_exe = "C:\\isotone\\php\\php.exe"
+                if os.path.exists(php_exe):
+                    result = subprocess.run(
+                        [php_exe, "-v"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+                    if result.returncode == 0:
+                        # Extract version from first line
+                        first_line = result.stdout.split('\n')[0]
+                        if 'PHP' in first_line:
+                            version = first_line.split()[1]
+                            # Update in main thread
+                            self.parent.after(0, lambda: self._update_stat_value("php_version", version))
+                        
+                    # Get memory limit
+                    result = subprocess.run(
+                        [php_exe, "-r", "echo ini_get('memory_limit');"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+                    if result.returncode == 0:
+                        memory_limit = result.stdout.strip()
+                        # Update in main thread
+                        self.parent.after(0, lambda: self._update_stat_value("php_memory", memory_limit))
+                else:
+                    self.parent.after(0, lambda: self._update_stat_value("php_version", "Not found"))
+                    self.parent.after(0, lambda: self._update_stat_value("php_memory", "N/A"))
+            except Exception as e:
+                self.logger.error(f"Error getting PHP info: {e}")
+                self.parent.after(0, lambda: self._update_stat_value("php_version", "Error"))
+                self.parent.after(0, lambda: self._update_stat_value("php_memory", "Error"))
+        
+        # Run in background thread
+        thread = threading.Thread(target=get_php_info, daemon=True)
+        thread.start()
+    
+    def _update_stat_value(self, stat_id: str, value: str):
+        """Update a stat value in the UI"""
+        if stat_id in self.stats_labels:
+            self.stats_labels[stat_id].configure(text=value)
     
     def hide(self):
         """Hide the dashboard"""
@@ -427,3 +498,4 @@ class Dashboard:
     def refresh(self):
         """Refresh dashboard data"""
         self.logger.info("Refreshing dashboard...")
+        self._update_php_info()

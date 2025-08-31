@@ -1,15 +1,15 @@
 @echo off
 REM ==================================================================
-REM _Template.bat - Template launcher for PowerShell scripts
-REM Copy and rename to match your .ps1 script name
+REM Build-ControlPanel.bat - Builds the IsotoneStack Control Panel EXE
+REM Uses PyInstaller to create a standalone executable
 REM ==================================================================
-title Script Name - IsotoneStack
+title Build Control Panel - IsotoneStack
 
-REM Get the directory of this script (scripts folder)
+REM Get the directory of this script (control-panel folder)
 set SCRIPT_DIR=%~dp0
 if "%SCRIPT_DIR:~-1%"=="\" set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
 
-REM Get isotone root (parent of scripts folder)
+REM Get isotone root (parent of control-panel folder)
 for %%I in ("%SCRIPT_DIR%\..") do set ISOTONE_PATH=%%~fI
 
 REM Derive script name from batch file name
@@ -24,17 +24,8 @@ if not exist "%SCRIPT_PATH%" (
     exit /b 1
 )
 
-REM Check if this script needs admin privileges
-REM Uncomment the following lines if admin is required:
-REM net session >nul 2>&1
-REM if %errorlevel% neq 0 (
-REM     echo Requesting Administrator privileges...
-REM     powershell -Command "Start-Process '%~f0' -ArgumentList '%*' -Verb RunAs"
-REM     exit /b
-REM )
-
 echo.
-echo === %SCRIPT_NAME% ===
+echo === Building IsotoneStack Control Panel ===
 echo.
 
 REM Check if portable PowerShell exists
@@ -52,6 +43,6 @@ if exist "%PWSH_EXE%" (
 REM Keep window open on error
 if %errorlevel% neq 0 (
     echo.
-    echo [ERROR] Script failed with error code: %errorlevel%
+    echo [ERROR] Build failed with error code: %errorlevel%
     pause
 )

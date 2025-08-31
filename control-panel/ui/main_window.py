@@ -53,20 +53,22 @@ class MainWindow:
     
     def _create_pages(self):
         """Create all page frames"""
-        # Dashboard
-        self.pages["dashboard"] = Dashboard(
-            self.content_frame,
-            self.config,
-            self.logger
-        )
-        
-        # Service Control
+        # Service Control (create first so dashboard can reference it)
         self.pages["services"] = ServicePanel(
             self.content_frame,
             self.config,
             self.logger
         )
         self.service_panel = self.pages["services"]  # Quick reference
+        
+        # Dashboard
+        self.pages["dashboard"] = Dashboard(
+            self.content_frame,
+            self.config,
+            self.logger
+        )
+        # Set reference to service panel for dashboard
+        self.pages["dashboard"].service_panel = self.pages["services"]
         
         # Virtual Hosts Manager
         self.pages["vhosts"] = VHostsManager(
@@ -123,7 +125,12 @@ class MainWindow:
                 self.pages[page_name].refresh()
     
     def update_service_status(self, service_name: str, status: str):
-        """Update service status in relevant pages"""
+        """Update service status in relevant pages (thread-safe)"""
+        # Schedule the update in the main thread using after()
+        self.root.after(0, self._update_service_status_impl, service_name, status)
+    
+    def _update_service_status_impl(self, service_name: str, status: str):
+        """Implementation of service status update (runs in main thread)"""
         # Update dashboard
         if "dashboard" in self.pages:
             self.pages["dashboard"].update_service_status(service_name, status)

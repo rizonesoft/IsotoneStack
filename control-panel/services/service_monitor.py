@@ -46,9 +46,9 @@ class ServiceMonitor:
                 mariadb_status = self._check_service("IsotoneMariaDB")
                 self._update_status("mariadb", mariadb_status)
                 
-                # Check PHP (process-based, not a Windows service)
-                php_status = self._check_php()
-                self._update_status("php", php_status)
+                # Check Mailpit (optional service)
+                mailpit_status = self._check_service("IsotoneMailpit")
+                self._update_status("mailpit", mailpit_status)
                 
                 # Check port availability
                 self._check_ports()
@@ -83,22 +83,15 @@ class ServiceMonitor:
             self.logger.error(f"Error checking service {service_name}: {e}")
             return "error"
     
-    def _check_php(self) -> str:
-        """Check if PHP-FPM process is running"""
-        for proc in psutil.process_iter(['name']):
-            try:
-                if 'php' in proc.info['name'].lower():
-                    return "running"
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                continue
-        return "stopped"
     
     def _check_ports(self):
         """Check if service ports are in use"""
         ports = {
             80: "http",
             443: "https",
-            3306: "mysql"
+            3306: "mysql",
+            1025: "smtp (mailpit)",
+            8025: "mailpit web"
         }
         
         for port, name in ports.items():
@@ -138,7 +131,7 @@ class ServiceMonitor:
             service_map = {
                 "apache": "httpd.exe",
                 "mariadb": "mysqld.exe",
-                "php": "php-cgi.exe"
+                "mailpit": "mailpit.exe"
             }
             
             process_name = service_map.get(service)

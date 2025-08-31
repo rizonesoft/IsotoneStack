@@ -1,0 +1,28 @@
+# IsotoneStack Control Panel Requirements
+
+# Core GUI framework
+customtkinter
+# tkinter is included with Python, no need to install
+
+# System monitoring and control
+psutil
+pywin32
+
+# System tray support
+pystray
+Pillow
+
+# Database connectivity
+PyMySQL
+
+# Configuration and logging
+PyYAML
+python-dotenv
+colorlog
+
+# Web server monitoring
+requests
+
+# Note: urllib3 is installed as a dependency of requests
+# Note: Development tools should be in requirements-dev.txt
+# asyncio is built-in to Python 3.7+

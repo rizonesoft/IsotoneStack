@@ -69,12 +69,12 @@ class ServicePanel:
                 "config": "C:\\isotone\\mariadb\\my.ini"
             },
             {
-                "id": "php",
-                "name": "PHP-FPM",
-                "service": "php-fpm",
-                "description": "PHP FastCGI Process Manager",
-                "port": "9000",
-                "config": "C:\\isotone\\php\\php.ini"
+                "id": "mailpit",
+                "name": "Mailpit Email Testing",
+                "service": "IsotoneMailpit",
+                "description": "Email testing server for development",
+                "port": "1025 (SMTP), 8025 (Web)",
+                "config": "C:\\isotone\\mailpit\\data\\mailpit.db"
             }
         ]
         
@@ -279,54 +279,115 @@ class ServicePanel:
         service_name = service["info"]["service"]
         
         try:
+            # Update status to show operation in progress
+            self.parent.after(0, self._update_service_status_impl, service_id, "pending")
+            
             if action == "start":
-                cmd = f"net start {service_name}"
+                # First check if service is already running
+                check_result = subprocess.run(f"sc query {service_name}", shell=True, capture_output=True, text=True)
+                if "RUNNING" in check_result.stdout:
+                    self.logger.info(f"{service_name} is already running")
+                    self.update_service_status(service_id, "running")
+                else:
+                    result = subprocess.run(f"net start {service_name}", shell=True, capture_output=True, text=True)
+                    if result.returncode == 0 or "already been started" in result.stdout:
+                        self.update_service_status(service_id, "running")
+                        self.logger.info(f"Started {service_name} successfully")
+                    else:
+                        self.logger.error(f"Failed to start {service_name}: {result.stderr or result.stdout}")
+                        self.update_service_status(service_id, "stopped")
+                        
             elif action == "stop":
-                cmd = f"net stop {service_name}"
-            elif action == "restart":
-                # Windows doesn't have restart, so stop then start
-                subprocess.run(f"net stop {service_name}", shell=True, capture_output=True)
-                time.sleep(2)
-                cmd = f"net start {service_name}"
-            
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-            
-            # Update status
-            if result.returncode == 0:
-                if action == "stop":
+                # First check if service is already stopped
+                check_result = subprocess.run(f"sc query {service_name}", shell=True, capture_output=True, text=True)
+                if "STOPPED" in check_result.stdout:
+                    self.logger.info(f"{service_name} is already stopped")
                     self.update_service_status(service_id, "stopped")
                 else:
+                    result = subprocess.run(f"net stop {service_name}", shell=True, capture_output=True, text=True)
+                    if result.returncode == 0 or "is not started" in result.stdout:
+                        self.update_service_status(service_id, "stopped")
+                        self.logger.info(f"Stopped {service_name} successfully")
+                    else:
+                        self.logger.error(f"Failed to stop {service_name}: {result.stderr or result.stdout}")
+                        # Check actual status after failed stop
+                        time.sleep(1)
+                        check_result = subprocess.run(f"sc query {service_name}", shell=True, capture_output=True, text=True)
+                        if "STOPPED" in check_result.stdout:
+                            self.update_service_status(service_id, "stopped")
+                        else:
+                            self.update_service_status(service_id, "running")
+                            
+            elif action == "restart":
+                # Windows doesn't have restart, so stop then start
+                # First stop the service
+                stop_result = subprocess.run(f"net stop {service_name}", shell=True, capture_output=True, text=True)
+                time.sleep(2)
+                # Then start it
+                start_result = subprocess.run(f"net start {service_name}", shell=True, capture_output=True, text=True)
+                if start_result.returncode == 0 or "already been started" in start_result.stdout:
                     self.update_service_status(service_id, "running")
-            else:
-                self.logger.error(f"Failed to {action} {service_name}: {result.stderr}")
+                    self.logger.info(f"Restarted {service_name} successfully")
+                else:
+                    self.logger.error(f"Failed to restart {service_name}: {start_result.stderr or start_result.stdout}")
+                    self.update_service_status(service_id, "stopped")
                 
         except Exception as e:
             self.logger.error(f"Error controlling service {service_name}: {e}")
+            # Check actual status on error
+            try:
+                result = subprocess.run(f"sc query {service_name}", shell=True, capture_output=True, text=True)
+                if "RUNNING" in result.stdout:
+                    self.update_service_status(service_id, "running")
+                else:
+                    self.update_service_status(service_id, "stopped")
+            except:
+                self.update_service_status(service_id, "unknown")
         
         finally:
-            # Re-enable buttons
-            service["start_btn"].configure(state="normal")
-            service["stop_btn"].configure(state="normal")
-            service["restart_btn"].configure(state="normal")
-            self.animating[service_id] = False
+            # Re-enable buttons in main thread
+            def re_enable_buttons():
+                service["start_btn"].configure(state="normal")
+                service["stop_btn"].configure(state="normal")
+                service["restart_btn"].configure(state="normal")
+                self.animating[service_id] = False
+            
+            self.parent.after(0, re_enable_buttons)
     
     def _animate_button(self, button: ctk.CTkButton):
-        """Animate a button during operation"""
+        """Animate a button during operation (thread-safe)"""
         original_text = button.cget("text")
+        
+        # Find which service this button belongs to
+        service_id = None
+        for sid, service in self.services.items():
+            if button in [service["start_btn"], service["stop_btn"], service["restart_btn"]]:
+                service_id = sid
+                break
+        
+        if not service_id:
+            return
         
         def animate():
             dots = 0
-            while self.animating.get(list(self.services.keys())[0], False):
+            while self.animating.get(service_id, False):
                 dots = (dots + 1) % 4
-                button.configure(text=original_text + "." * dots)
+                # Use after() to update button text in main thread
+                self.parent.after(0, lambda t=original_text + "." * dots: button.configure(text=t))
                 time.sleep(0.5)
-            button.configure(text=original_text)
+            # Reset text in main thread
+            self.parent.after(0, lambda: button.configure(text=original_text))
         
         thread = threading.Thread(target=animate, daemon=True)
         thread.start()
     
     def update_service_status(self, service_id: str, status: str):
-        """Update service status display"""
+        """Update service status display (thread-safe)"""
+        # Use after() to ensure UI updates happen in the main thread
+        self.parent.after(0, self._update_service_status_impl, service_id, status)
+    
+    def _update_service_status_impl(self, service_id: str, status: str):
+        """Implementation of service status update (runs in main thread)"""
         if service_id not in self.services:
             return
         
@@ -338,6 +399,9 @@ class ServicePanel:
         elif status == "stopped":
             service["status_frame"].configure(fg_color="red")
             service["status_label"].configure(text="● Stopped", text_color="red")
+        elif status == "pending":
+            service["status_frame"].configure(fg_color="yellow")
+            service["status_label"].configure(text="● Processing...", text_color="yellow")
         else:
             service["status_frame"].configure(fg_color="orange")
             service["status_label"].configure(text="● Unknown", text_color="orange")
