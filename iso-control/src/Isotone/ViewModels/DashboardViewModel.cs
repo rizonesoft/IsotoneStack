@@ -25,6 +25,33 @@ namespace Isotone.ViewModels
         private string mailpitStatus = "Checking...";
 
         [ObservableProperty]
+        private TimeSpan apacheUptime;
+
+        [ObservableProperty]
+        private TimeSpan mariaDBUptime;
+
+        [ObservableProperty]
+        private TimeSpan mailpitUptime;
+
+        [ObservableProperty]
+        private DateTime? apacheStartTime;
+
+        [ObservableProperty]
+        private DateTime? mariaDBStartTime;
+
+        [ObservableProperty]
+        private DateTime? mailpitStartTime;
+
+        [ObservableProperty]
+        private bool isApacheLoading;
+
+        [ObservableProperty]
+        private bool isMariaDBLoading;
+
+        [ObservableProperty]
+        private bool isMailpitLoading;
+
+        [ObservableProperty]
         private Brush apacheStatusColor = Brushes.Gray;
 
         [ObservableProperty]
@@ -32,6 +59,15 @@ namespace Isotone.ViewModels
 
         [ObservableProperty]
         private Brush mailpitStatusColor = Brushes.Gray;
+
+        [ObservableProperty]
+        private Brush apacheStatusBackground = new SolidColorBrush(Color.FromArgb(20, 158, 158, 158));
+
+        [ObservableProperty]
+        private Brush mariaDBStatusBackground = new SolidColorBrush(Color.FromArgb(20, 158, 158, 158));
+
+        [ObservableProperty]
+        private Brush mailpitStatusBackground = new SolidColorBrush(Color.FromArgb(20, 158, 158, 158));
 
         [ObservableProperty]
         private bool canStartApache;
@@ -125,17 +161,40 @@ namespace Isotone.ViewModels
             {
                 ApacheStatus = "Not Installed";
                 ApacheStatusColor = Brushes.Gray;
+                ApacheStatusBackground = new SolidColorBrush(Color.FromArgb(20, 158, 158, 158));
                 CanStartApache = false;
                 CanStopApache = false;
                 CanRestartApache = false;
+                ApacheUptime = TimeSpan.Zero;
                 return;
             }
 
-            ApacheStatus = service.IsRunning ? "Running" : "Stopped";
-            ApacheStatusColor = service.IsRunning ? Brushes.LightGreen : Brushes.OrangeRed;
-            CanStartApache = !service.IsRunning;
-            CanStopApache = service.IsRunning;
-            CanRestartApache = service.IsRunning;
+            if (!IsApacheLoading)
+            {
+                ApacheStatus = service.IsRunning ? "Running" : "Stopped";
+                
+                if (service.IsRunning)
+                {
+                    ApacheStatusColor = new SolidColorBrush(Color.FromRgb(76, 175, 80));
+                    ApacheStatusBackground = new SolidColorBrush(Color.FromArgb(20, 76, 175, 80));
+                    
+                    if (ApacheStartTime == null)
+                        ApacheStartTime = DateTime.Now;
+                    
+                    ApacheUptime = DateTime.Now - ApacheStartTime.Value;
+                }
+                else
+                {
+                    ApacheStatusColor = new SolidColorBrush(Color.FromRgb(158, 158, 158));
+                    ApacheStatusBackground = new SolidColorBrush(Color.FromArgb(20, 158, 158, 158));
+                    ApacheStartTime = null;
+                    ApacheUptime = TimeSpan.Zero;
+                }
+            }
+            
+            CanStartApache = !service.IsRunning && !IsApacheLoading;
+            CanStopApache = service.IsRunning && !IsApacheLoading;
+            CanRestartApache = service.IsRunning && !IsApacheLoading;
         }
 
         private void UpdateMariaDBStatus(ServiceInfo? service)
@@ -144,17 +203,40 @@ namespace Isotone.ViewModels
             {
                 MariaDBStatus = "Not Installed";
                 MariaDBStatusColor = Brushes.Gray;
+                MariaDBStatusBackground = new SolidColorBrush(Color.FromArgb(20, 158, 158, 158));
                 CanStartMariaDB = false;
                 CanStopMariaDB = false;
                 CanRestartMariaDB = false;
+                MariaDBUptime = TimeSpan.Zero;
                 return;
             }
 
-            MariaDBStatus = service.IsRunning ? "Running" : "Stopped";
-            MariaDBStatusColor = service.IsRunning ? Brushes.LightGreen : Brushes.OrangeRed;
-            CanStartMariaDB = !service.IsRunning;
-            CanStopMariaDB = service.IsRunning;
-            CanRestartMariaDB = service.IsRunning;
+            if (!IsMariaDBLoading)
+            {
+                MariaDBStatus = service.IsRunning ? "Running" : "Stopped";
+                
+                if (service.IsRunning)
+                {
+                    MariaDBStatusColor = new SolidColorBrush(Color.FromRgb(76, 175, 80));
+                    MariaDBStatusBackground = new SolidColorBrush(Color.FromArgb(20, 76, 175, 80));
+                    
+                    if (MariaDBStartTime == null)
+                        MariaDBStartTime = DateTime.Now;
+                    
+                    MariaDBUptime = DateTime.Now - MariaDBStartTime.Value;
+                }
+                else
+                {
+                    MariaDBStatusColor = new SolidColorBrush(Color.FromRgb(158, 158, 158));
+                    MariaDBStatusBackground = new SolidColorBrush(Color.FromArgb(20, 158, 158, 158));
+                    MariaDBStartTime = null;
+                    MariaDBUptime = TimeSpan.Zero;
+                }
+            }
+            
+            CanStartMariaDB = !service.IsRunning && !IsMariaDBLoading;
+            CanStopMariaDB = service.IsRunning && !IsMariaDBLoading;
+            CanRestartMariaDB = service.IsRunning && !IsMariaDBLoading;
         }
 
         private void UpdateMailpitStatus(ServiceInfo? service)
@@ -163,17 +245,40 @@ namespace Isotone.ViewModels
             {
                 MailpitStatus = "Not Installed";
                 MailpitStatusColor = Brushes.Gray;
+                MailpitStatusBackground = new SolidColorBrush(Color.FromArgb(20, 158, 158, 158));
                 CanStartMailpit = false;
                 CanStopMailpit = false;
                 CanRestartMailpit = false;
+                MailpitUptime = TimeSpan.Zero;
                 return;
             }
 
-            MailpitStatus = service.IsRunning ? "Running" : "Stopped";
-            MailpitStatusColor = service.IsRunning ? Brushes.LightGreen : Brushes.OrangeRed;
-            CanStartMailpit = !service.IsRunning;
-            CanStopMailpit = service.IsRunning;
-            CanRestartMailpit = service.IsRunning;
+            if (!IsMailpitLoading)
+            {
+                MailpitStatus = service.IsRunning ? "Running" : "Stopped";
+                
+                if (service.IsRunning)
+                {
+                    MailpitStatusColor = new SolidColorBrush(Color.FromRgb(76, 175, 80));
+                    MailpitStatusBackground = new SolidColorBrush(Color.FromArgb(20, 76, 175, 80));
+                    
+                    if (MailpitStartTime == null)
+                        MailpitStartTime = DateTime.Now;
+                    
+                    MailpitUptime = DateTime.Now - MailpitStartTime.Value;
+                }
+                else
+                {
+                    MailpitStatusColor = new SolidColorBrush(Color.FromRgb(158, 158, 158));
+                    MailpitStatusBackground = new SolidColorBrush(Color.FromArgb(20, 158, 158, 158));
+                    MailpitStartTime = null;
+                    MailpitUptime = TimeSpan.Zero;
+                }
+            }
+            
+            CanStartMailpit = !service.IsRunning && !IsMailpitLoading;
+            CanStopMailpit = service.IsRunning && !IsMailpitLoading;
+            CanRestartMailpit = service.IsRunning && !IsMailpitLoading;
         }
 
         [RelayCommand]
@@ -181,12 +286,22 @@ namespace Isotone.ViewModels
         {
             try
             {
+                IsApacheLoading = true;
+                ApacheStatus = "Starting";
+                ApacheStatusColor = new SolidColorBrush(Color.FromRgb(255, 193, 7));
+                
                 await _serviceManager.StartServiceAsync("IsotoneApache");
                 _snackbarMessageQueue.Enqueue("Apache service started");
             }
             catch (Exception ex)
             {
+                ApacheStatus = "Error";
+                ApacheStatusColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));
                 _snackbarMessageQueue.Enqueue($"Failed to start Apache: {ex.Message}");
+            }
+            finally
+            {
+                IsApacheLoading = false;
             }
         }
 
@@ -195,12 +310,22 @@ namespace Isotone.ViewModels
         {
             try
             {
+                IsApacheLoading = true;
+                ApacheStatus = "Stopping";
+                ApacheStatusColor = new SolidColorBrush(Color.FromRgb(255, 152, 0));
+                
                 await _serviceManager.StopServiceAsync("IsotoneApache");
                 _snackbarMessageQueue.Enqueue("Apache service stopped");
             }
             catch (Exception ex)
             {
+                ApacheStatus = "Error";
+                ApacheStatusColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));
                 _snackbarMessageQueue.Enqueue($"Failed to stop Apache: {ex.Message}");
+            }
+            finally
+            {
+                IsApacheLoading = false;
             }
         }
 
@@ -209,12 +334,23 @@ namespace Isotone.ViewModels
         {
             try
             {
+                IsApacheLoading = true;
+                ApacheStatus = "Restarting";
+                ApacheStatusColor = new SolidColorBrush(Color.FromRgb(3, 169, 244));
+                
                 await _serviceManager.RestartServiceAsync("IsotoneApache");
+                ApacheStartTime = DateTime.Now;
                 _snackbarMessageQueue.Enqueue("Apache service restarted");
             }
             catch (Exception ex)
             {
+                ApacheStatus = "Error";
+                ApacheStatusColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));
                 _snackbarMessageQueue.Enqueue($"Failed to restart Apache: {ex.Message}");
+            }
+            finally
+            {
+                IsApacheLoading = false;
             }
         }
 
@@ -223,12 +359,22 @@ namespace Isotone.ViewModels
         {
             try
             {
+                IsMariaDBLoading = true;
+                MariaDBStatus = "Starting";
+                MariaDBStatusColor = new SolidColorBrush(Color.FromRgb(255, 193, 7));
+                
                 await _serviceManager.StartServiceAsync("IsotoneMariaDB");
                 _snackbarMessageQueue.Enqueue("MariaDB service started");
             }
             catch (Exception ex)
             {
+                MariaDBStatus = "Error";
+                MariaDBStatusColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));
                 _snackbarMessageQueue.Enqueue($"Failed to start MariaDB: {ex.Message}");
+            }
+            finally
+            {
+                IsMariaDBLoading = false;
             }
         }
 
@@ -237,12 +383,22 @@ namespace Isotone.ViewModels
         {
             try
             {
+                IsMariaDBLoading = true;
+                MariaDBStatus = "Stopping";
+                MariaDBStatusColor = new SolidColorBrush(Color.FromRgb(255, 152, 0));
+                
                 await _serviceManager.StopServiceAsync("IsotoneMariaDB");
                 _snackbarMessageQueue.Enqueue("MariaDB service stopped");
             }
             catch (Exception ex)
             {
+                MariaDBStatus = "Error";
+                MariaDBStatusColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));
                 _snackbarMessageQueue.Enqueue($"Failed to stop MariaDB: {ex.Message}");
+            }
+            finally
+            {
+                IsMariaDBLoading = false;
             }
         }
 
@@ -251,12 +407,23 @@ namespace Isotone.ViewModels
         {
             try
             {
+                IsMariaDBLoading = true;
+                MariaDBStatus = "Restarting";
+                MariaDBStatusColor = new SolidColorBrush(Color.FromRgb(3, 169, 244));
+                
                 await _serviceManager.RestartServiceAsync("IsotoneMariaDB");
+                MariaDBStartTime = DateTime.Now;
                 _snackbarMessageQueue.Enqueue("MariaDB service restarted");
             }
             catch (Exception ex)
             {
+                MariaDBStatus = "Error";
+                MariaDBStatusColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));
                 _snackbarMessageQueue.Enqueue($"Failed to restart MariaDB: {ex.Message}");
+            }
+            finally
+            {
+                IsMariaDBLoading = false;
             }
         }
 
@@ -265,12 +432,22 @@ namespace Isotone.ViewModels
         {
             try
             {
+                IsMailpitLoading = true;
+                MailpitStatus = "Starting";
+                MailpitStatusColor = new SolidColorBrush(Color.FromRgb(255, 193, 7));
+                
                 await _serviceManager.StartServiceAsync("IsotoneMailpit");
                 _snackbarMessageQueue.Enqueue("Mailpit service started");
             }
             catch (Exception ex)
             {
+                MailpitStatus = "Error";
+                MailpitStatusColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));
                 _snackbarMessageQueue.Enqueue($"Failed to start Mailpit: {ex.Message}");
+            }
+            finally
+            {
+                IsMailpitLoading = false;
             }
         }
 
@@ -279,12 +456,22 @@ namespace Isotone.ViewModels
         {
             try
             {
+                IsMailpitLoading = true;
+                MailpitStatus = "Stopping";
+                MailpitStatusColor = new SolidColorBrush(Color.FromRgb(255, 152, 0));
+                
                 await _serviceManager.StopServiceAsync("IsotoneMailpit");
                 _snackbarMessageQueue.Enqueue("Mailpit service stopped");
             }
             catch (Exception ex)
             {
+                MailpitStatus = "Error";
+                MailpitStatusColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));
                 _snackbarMessageQueue.Enqueue($"Failed to stop Mailpit: {ex.Message}");
+            }
+            finally
+            {
+                IsMailpitLoading = false;
             }
         }
 
@@ -293,12 +480,23 @@ namespace Isotone.ViewModels
         {
             try
             {
+                IsMailpitLoading = true;
+                MailpitStatus = "Restarting";
+                MailpitStatusColor = new SolidColorBrush(Color.FromRgb(3, 169, 244));
+                
                 await _serviceManager.RestartServiceAsync("IsotoneMailpit");
+                MailpitStartTime = DateTime.Now;
                 _snackbarMessageQueue.Enqueue("Mailpit service restarted");
             }
             catch (Exception ex)
             {
+                MailpitStatus = "Error";
+                MailpitStatusColor = new SolidColorBrush(Color.FromRgb(244, 67, 54));
                 _snackbarMessageQueue.Enqueue($"Failed to restart Mailpit: {ex.Message}");
+            }
+            finally
+            {
+                IsMailpitLoading = false;
             }
         }
 

@@ -4,34 +4,158 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:Isotone.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200">
     
     <UserControl.Resources>
-        <!-- Card Hover Effect Style with Cyan Accent on Hover -->
-        <Style x:Key="HoverCardStyle" TargetType="materialDesign:Card" BasedOn="{StaticResource {x:Type materialDesign:Card}}">
+        <!-- Enhanced Card Style with Modern Effects -->
+        <Style x:Key="ModernCardStyle" TargetType="materialDesign:Card" BasedOn="{StaticResource {x:Type materialDesign:Card}}">
             <Setter Property="ClipToBounds" Value="False"/>
-            <Setter Property="UniformCornerRadius" Value="0"/>
+            <Setter Property="UniformCornerRadius" Value="4"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Setter.Value>
+            </Setter>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="materialDesign:Card">
-                        <Border x:Name="CardBorder"
-                              Background="{TemplateBinding Background}"
-                              BorderBrush="#2A3250"
-                              BorderThickness="1"
-                              CornerRadius="0"
-                              Padding="{TemplateBinding Padding}">
-                            <ContentPresenter/>
-                        </Border>
+                        <Grid>
+                            <!-- Animated status border -->
+                            <Border x:Name="StatusBorder"
+                                  CornerRadius="4"
+                                  BorderThickness="2"
+                                  Opacity="0"
+                                  BorderBrush="{Binding DataContext.ApacheStatusColor, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DataContext.ApacheStatus, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Running">
+                                                <DataTrigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                           From="0" To="0.5" Duration="0:0:0.5"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.EnterActions>
+                                                <DataTrigger.ExitActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                           To="0" Duration="0:0:0.5"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.ExitActions>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+                            
+                            <!-- Main card content -->
+                            <Border x:Name="CardBorder"
+                                  Background="{TemplateBinding Background}"
+                                  BorderBrush="#2A3545"
+                                  BorderThickness="1"
+                                  CornerRadius="4"
+                                  Padding="{TemplateBinding Padding}">
+                                <Border.Effect>
+                                    <DropShadowEffect x:Name="CardShadow" 
+                                                    Color="Black" 
+                                                    Direction="270" 
+                                                    ShadowDepth="2" 
+                                                    Opacity="0.2" 
+                                                    BlurRadius="8"/>
+                                </Border.Effect>
+                                <ContentPresenter/>
+                            </Border>
+                        </Grid>
                         
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="CardBorder" Property="BorderBrush" Value="#22D3EE"/>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="CardBorder"
+                                                          Storyboard.TargetProperty="BorderBrush.Color"
+                                                          To="#22D3EE" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetName="CardShadow"
+                                                           Storyboard.TargetProperty="ShadowDepth"
+                                                           To="4" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetName="CardShadow"
+                                                           Storyboard.TargetProperty="BlurRadius"
+                                                           To="12" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX"
+                                                           To="1.01" Duration="0:0:0.3">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY"
+                                                           To="1.01" Duration="0:0:0.3">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="CardBorder"
+                                                          Storyboard.TargetProperty="BorderBrush.Color"
+                                                          To="#2A3545" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetName="CardShadow"
+                                                           Storyboard.TargetProperty="ShadowDepth"
+                                                           To="2" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetName="CardShadow"
+                                                           Storyboard.TargetProperty="BlurRadius"
+                                                           To="8" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX"
+                                                           To="1" Duration="0:0:0.3">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY"
+                                                           To="1" Duration="0:0:0.3">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+        
+        <!-- Status Badge Style -->
+        <Style x:Key="StatusBadgeStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        
+        <!-- Action Button Style -->
+        <Style x:Key="ServiceActionButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="2"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1A2332"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </UserControl.Resources>
     
@@ -65,7 +189,7 @@
                 <!-- Apache Card -->
                 <materialDesign:Card Grid.Column="0" Margin="0,0,12,0" 
                                    Background="#1C2635"
-                                   Style="{StaticResource HoverCardStyle}">
+                                   Style="{StaticResource ModernCardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -74,7 +198,8 @@
                         </Grid.RowDefinitions>
 
                         <!-- Service Header -->
-                        <Border Grid.Row="0" Background="#080C12" Padding="16,12">
+                        <Border Grid.Row="0" Background="#0F1420" 
+                                CornerRadius="4,4,0,0" Padding="16,14">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -83,67 +208,148 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <materialDesign:PackIcon Grid.Column="0" Kind="Web" 
-                                                       Width="28" Height="28" 
+                                                       Width="24" Height="24" 
                                                        Foreground="{Binding ApacheStatusColor}"
-                                                       VerticalAlignment="Center"/>
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,12,0"/>
                                 
-                                <TextBlock Grid.Column="1" Text="Apache HTTP Server" 
-                                         FontSize="16" FontWeight="Medium" 
-                                         Margin="12,0,0,0" VerticalAlignment="Center"
-                                         Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Apache" 
+                                             FontSize="15" FontWeight="SemiBold" 
+                                             Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <TextBlock Text="Web Server" FontSize="11" 
+                                             Foreground="{DynamicResource SecondaryTextBrush}"
+                                             Opacity="0.8" Margin="0,2,0,0"/>
+                                </StackPanel>
                                 
                                 <!-- Status Indicator -->
-                                <Border Grid.Column="2" Padding="8,4">
-                                    <Border.Background>
-                                        <SolidColorBrush Color="Black" Opacity="0.3"/>
-                                    </Border.Background>
-                                    <TextBlock Text="{Binding ApacheStatus}" 
-                                             FontSize="11" FontWeight="Medium"
-                                             Foreground="{Binding ApacheStatusColor}"/>
+                                <Border Grid.Column="2" Style="{StaticResource StatusBadgeStyle}"
+                                        Background="{Binding ApacheStatusBackground}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="6" Height="6" 
+                                               Fill="{Binding ApacheStatusColor}"
+                                               Margin="0,0,6,0">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ApacheStatus}" Value="Running">
+                                                            <DataTrigger.EnterActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard RepeatBehavior="Forever">
+                                                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                                       From="1" To="0.3" Duration="0:0:1.5"
+                                                                                       AutoReverse="True"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.EnterActions>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                        <TextBlock Text="{Binding ApacheStatus}" 
+                                                 FontSize="11" FontWeight="Medium"
+                                                 Foreground="{Binding ApacheStatusColor}"/>
+                                    </StackPanel>
                                 </Border>
                             </Grid>
                         </Border>
 
                         <!-- Service Info -->
-                        <StackPanel Grid.Row="1" Margin="16,12">
-                            <TextBlock Text="Web Server" FontSize="12" 
-                                     Foreground="{DynamicResource SecondaryTextBrush}"
-                                     Margin="0,0,0,4"/>
-                            <TextBlock Text="Port: 80, 443" FontSize="11" 
-                                     Foreground="{DynamicResource SecondaryTextBrush}"
-                                     Opacity="0.7"/>
-                        </StackPanel>
-
-                        <!-- Action Buttons -->
-                        <Border Grid.Row="2" Background="#080C12" Padding="12,8">
-                            <Grid>
+                        <Grid Grid.Row="1" Margin="16,16">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                
-                                <Button Grid.Column="0" Command="{Binding StartApacheCommand}" 
-                                      Style="{StaticResource MaterialDesignFlatButton}"
-                                      Height="28" Padding="0" Margin="0,0,4,0"
-                                      IsEnabled="{Binding CanStartApache}">
-                                    <materialDesign:PackIcon Kind="Play" Width="18" Height="18"/>
-                                </Button>
-                                
-                                <Button Grid.Column="1" Command="{Binding StopApacheCommand}" 
-                                      Style="{StaticResource MaterialDesignFlatButton}"
-                                      Height="28" Padding="0" Margin="0,0,4,0"
-                                      IsEnabled="{Binding CanStopApache}">
-                                    <materialDesign:PackIcon Kind="Stop" Width="18" Height="18"/>
-                                </Button>
-                                
-                                <Button Grid.Column="2" Command="{Binding RestartApacheCommand}" 
-                                      Style="{StaticResource MaterialDesignFlatButton}"
-                                      Height="28" Padding="0"
-                                      IsEnabled="{Binding CanRestartApache}">
-                                    <materialDesign:PackIcon Kind="Restart" Width="18" Height="18"/>
-                                </Button>
+                                <TextBlock Grid.Column="0" Text="Ports:" FontSize="11" 
+                                         Foreground="{DynamicResource SecondaryTextBrush}"
+                                         Opacity="0.7" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="1" Text="80, 443" FontSize="11" 
+                                         FontFamily="Consolas"
+                                         Foreground="{DynamicResource AccentBrush}"/>
                             </Grid>
+                            
+                            <Grid Grid.Row="1" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Status:" FontSize="11" 
+                                         Foreground="{DynamicResource SecondaryTextBrush}"
+                                         Opacity="0.7" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="1" Text="Configured" FontSize="11" 
+                                         Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </Grid>
+                        </Grid>
+
+                        <!-- Action Buttons -->
+                        <Border Grid.Row="2" Background="#0A0F1A" 
+                                CornerRadius="0,0,4,4" Padding="8">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Command="{Binding StartApacheCommand}" 
+                                      Style="{StaticResource ServiceActionButton}"
+                                      IsEnabled="{Binding CanStartApache}"
+                                      ToolTip="Start Service (Ctrl+1)">
+                                    <Grid>
+                                        <materialDesign:PackIcon Kind="Play" Width="16" Height="16">
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="materialDesign:PackIcon">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsApacheLoading}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+                                        </materialDesign:PackIcon>
+                                        <materialDesign:PackIcon Kind="CircleOutline" Width="16" Height="16">
+                                            <materialDesign:PackIcon.RenderTransform>
+                                                <RotateTransform CenterX="8" CenterY="8"/>
+                                            </materialDesign:PackIcon.RenderTransform>
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="materialDesign:PackIcon">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsApacheLoading}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                            <DataTrigger.EnterActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard RepeatBehavior="Forever">
+                                                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle"
+                                                                                       From="0" To="360" Duration="0:0:1"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.EnterActions>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+                                        </materialDesign:PackIcon>
+                                    </Grid>
+                                </Button>
+                                
+                                <Button Command="{Binding StopApacheCommand}" 
+                                      Style="{StaticResource ServiceActionButton}"
+                                      IsEnabled="{Binding CanStopApache}"
+                                      ToolTip="Stop Service">
+                                    <materialDesign:PackIcon Kind="Stop" Width="16" Height="16"/>
+                                </Button>
+                                
+                                <Button Command="{Binding RestartApacheCommand}" 
+                                      Style="{StaticResource ServiceActionButton}"
+                                      IsEnabled="{Binding CanRestartApache}"
+                                      ToolTip="Restart Service">
+                                    <materialDesign:PackIcon Kind="Restart" Width="16" Height="16"/>
+                                </Button>
+                            </StackPanel>
                         </Border>
                     </Grid>
                 </materialDesign:Card>
@@ -151,7 +357,7 @@
                 <!-- MariaDB Card -->
                 <materialDesign:Card Grid.Column="1" Margin="0,0,12,0" 
                                    Background="#1C2635"
-                                   Style="{StaticResource HoverCardStyle}">
+                                   Style="{StaticResource ModernCardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -160,7 +366,8 @@
                         </Grid.RowDefinitions>
 
                         <!-- Service Header -->
-                        <Border Grid.Row="0" Background="#080C12" Padding="16,12">
+                        <Border Grid.Row="0" Background="#0F1420" 
+                                CornerRadius="4,4,0,0" Padding="16,14">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -169,67 +376,141 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <materialDesign:PackIcon Grid.Column="0" Kind="Database" 
-                                                       Width="28" Height="28" 
+                                                       Width="24" Height="24" 
                                                        Foreground="{Binding MariaDBStatusColor}"
-                                                       VerticalAlignment="Center"/>
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,12,0"/>
                                 
-                                <TextBlock Grid.Column="1" Text="MariaDB Database" 
-                                         FontSize="16" FontWeight="Medium" 
-                                         Margin="12,0,0,0" VerticalAlignment="Center"
-                                         Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="MariaDB" 
+                                             FontSize="15" FontWeight="SemiBold" 
+                                             Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <TextBlock Text="Database Server" FontSize="11" 
+                                             Foreground="{DynamicResource SecondaryTextBrush}"
+                                             Opacity="0.8" Margin="0,2,0,0"/>
+                                </StackPanel>
                                 
                                 <!-- Status Indicator -->
-                                <Border Grid.Column="2" Padding="8,4">
-                                    <Border.Background>
-                                        <SolidColorBrush Color="Black" Opacity="0.3"/>
-                                    </Border.Background>
-                                    <TextBlock Text="{Binding MariaDBStatus}" 
-                                             FontSize="11" FontWeight="Medium"
-                                             Foreground="{Binding MariaDBStatusColor}"/>
+                                <Border Grid.Column="2" Style="{StaticResource StatusBadgeStyle}"
+                                        Background="{Binding MariaDBStatusBackground}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="6" Height="6" 
+                                               Fill="{Binding MariaDBStatusColor}"
+                                               Margin="0,0,6,0">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding MariaDBStatus}" Value="Running">
+                                                            <DataTrigger.EnterActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard RepeatBehavior="Forever">
+                                                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                                       From="1" To="0.3" Duration="0:0:1.5"
+                                                                                       AutoReverse="True"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.EnterActions>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                        <TextBlock Text="{Binding MariaDBStatus}" 
+                                                 FontSize="11" FontWeight="Medium"
+                                                 Foreground="{Binding MariaDBStatusColor}"/>
+                                    </StackPanel>
                                 </Border>
                             </Grid>
                         </Border>
 
                         <!-- Service Info -->
-                        <StackPanel Grid.Row="1" Margin="16,12">
-                            <TextBlock Text="Database Server" FontSize="12" 
-                                     Foreground="{DynamicResource SecondaryTextBrush}"
-                                     Margin="0,0,0,4"/>
-                            <TextBlock Text="Port: 3306" FontSize="11" 
-                                     Foreground="{DynamicResource SecondaryTextBrush}"
-                                     Opacity="0.7"/>
+                        <StackPanel Grid.Row="1" Margin="16,16">
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Port:" FontSize="11" 
+                                         Foreground="{DynamicResource SecondaryTextBrush}"
+                                         Opacity="0.7" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="1" Text="3306" FontSize="11" 
+                                         FontFamily="Consolas"
+                                         Foreground="{DynamicResource AccentBrush}"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Status:" FontSize="11" 
+                                         Foreground="{DynamicResource SecondaryTextBrush}"
+                                         Opacity="0.7" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="1" Text="Configured" FontSize="11" 
+                                         Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </Grid>
                         </StackPanel>
 
                         <!-- Action Buttons -->
-                        <Border Grid.Row="2" Background="#080C12" Padding="12,8">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <Button Grid.Column="0" Command="{Binding StartMariaDBCommand}" 
-                                      Style="{StaticResource MaterialDesignFlatButton}"
-                                      Height="28" Padding="0" Margin="0,0,4,0"
-                                      IsEnabled="{Binding CanStartMariaDB}">
-                                    <materialDesign:PackIcon Kind="Play" Width="18" Height="18"/>
+                        <Border Grid.Row="2" Background="#0A0F1A" 
+                                CornerRadius="0,0,4,4" Padding="8">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Command="{Binding StartMariaDBCommand}" 
+                                      Style="{StaticResource ServiceActionButton}"
+                                      IsEnabled="{Binding CanStartMariaDB}"
+                                      ToolTip="Start Service (Ctrl+2)">
+                                    <Grid>
+                                        <materialDesign:PackIcon Kind="Play" Width="16" Height="16">
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="materialDesign:PackIcon">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMariaDBLoading}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+                                        </materialDesign:PackIcon>
+                                        <materialDesign:PackIcon Kind="CircleOutline" Width="16" Height="16">
+                                            <materialDesign:PackIcon.RenderTransform>
+                                                <RotateTransform CenterX="8" CenterY="8"/>
+                                            </materialDesign:PackIcon.RenderTransform>
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="materialDesign:PackIcon">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMariaDBLoading}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                            <DataTrigger.EnterActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard RepeatBehavior="Forever">
+                                                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle"
+                                                                                       From="0" To="360" Duration="0:0:1"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.EnterActions>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+                                        </materialDesign:PackIcon>
+                                    </Grid>
                                 </Button>
                                 
-                                <Button Grid.Column="1" Command="{Binding StopMariaDBCommand}" 
-                                      Style="{StaticResource MaterialDesignFlatButton}"
-                                      Height="28" Padding="0" Margin="0,0,4,0"
-                                      IsEnabled="{Binding CanStopMariaDB}">
-                                    <materialDesign:PackIcon Kind="Stop" Width="18" Height="18"/>
+                                <Button Command="{Binding StopMariaDBCommand}" 
+                                      Style="{StaticResource ServiceActionButton}"
+                                      IsEnabled="{Binding CanStopMariaDB}"
+                                      ToolTip="Stop Service">
+                                    <materialDesign:PackIcon Kind="Stop" Width="16" Height="16"/>
                                 </Button>
                                 
-                                <Button Grid.Column="2" Command="{Binding RestartMariaDBCommand}" 
-                                      Style="{StaticResource MaterialDesignFlatButton}"
-                                      Height="28" Padding="0"
-                                      IsEnabled="{Binding CanRestartMariaDB}">
-                                    <materialDesign:PackIcon Kind="Restart" Width="18" Height="18"/>
+                                <Button Command="{Binding RestartMariaDBCommand}" 
+                                      Style="{StaticResource ServiceActionButton}"
+                                      IsEnabled="{Binding CanRestartMariaDB}"
+                                      ToolTip="Restart Service">
+                                    <materialDesign:PackIcon Kind="Restart" Width="16" Height="16"/>
                                 </Button>
-                            </Grid>
+                            </StackPanel>
                         </Border>
                     </Grid>
                 </materialDesign:Card>
@@ -237,7 +518,7 @@
                 <!-- Mailpit Card -->
                 <materialDesign:Card Grid.Column="2" 
                                    Background="#1C2635"
-                                   Style="{StaticResource HoverCardStyle}">
+                                   Style="{StaticResource ModernCardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -246,7 +527,8 @@
                         </Grid.RowDefinitions>
 
                         <!-- Service Header -->
-                        <Border Grid.Row="0" Background="#080C12" Padding="16,12">
+                        <Border Grid.Row="0" Background="#0F1420" 
+                                CornerRadius="4,4,0,0" Padding="16,14">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -255,67 +537,141 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <materialDesign:PackIcon Grid.Column="0" Kind="Email" 
-                                                       Width="28" Height="28" 
+                                                       Width="24" Height="24" 
                                                        Foreground="{Binding MailpitStatusColor}"
-                                                       VerticalAlignment="Center"/>
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,12,0"/>
                                 
-                                <TextBlock Grid.Column="1" Text="Mailpit Server" 
-                                         FontSize="16" FontWeight="Medium" 
-                                         Margin="12,0,0,0" VerticalAlignment="Center"
-                                         Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Mailpit" 
+                                             FontSize="15" FontWeight="SemiBold" 
+                                             Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <TextBlock Text="Email Testing" FontSize="11" 
+                                             Foreground="{DynamicResource SecondaryTextBrush}"
+                                             Opacity="0.8" Margin="0,2,0,0"/>
+                                </StackPanel>
                                 
                                 <!-- Status Indicator -->
-                                <Border Grid.Column="2" Padding="8,4">
-                                    <Border.Background>
-                                        <SolidColorBrush Color="Black" Opacity="0.3"/>
-                                    </Border.Background>
-                                    <TextBlock Text="{Binding MailpitStatus}" 
-                                             FontSize="11" FontWeight="Medium"
-                                             Foreground="{Binding MailpitStatusColor}"/>
+                                <Border Grid.Column="2" Style="{StaticResource StatusBadgeStyle}"
+                                        Background="{Binding MailpitStatusBackground}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="6" Height="6" 
+                                               Fill="{Binding MailpitStatusColor}"
+                                               Margin="0,0,6,0">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding MailpitStatus}" Value="Running">
+                                                            <DataTrigger.EnterActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard RepeatBehavior="Forever">
+                                                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                                       From="1" To="0.3" Duration="0:0:1.5"
+                                                                                       AutoReverse="True"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.EnterActions>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                        <TextBlock Text="{Binding MailpitStatus}" 
+                                                 FontSize="11" FontWeight="Medium"
+                                                 Foreground="{Binding MailpitStatusColor}"/>
+                                    </StackPanel>
                                 </Border>
                             </Grid>
                         </Border>
 
                         <!-- Service Info -->
-                        <StackPanel Grid.Row="1" Margin="16,12">
-                            <TextBlock Text="Email Testing" FontSize="12" 
-                                     Foreground="{DynamicResource SecondaryTextBrush}"
-                                     Margin="0,0,0,4"/>
-                            <TextBlock Text="Port: 1025, 8025" FontSize="11" 
-                                     Foreground="{DynamicResource SecondaryTextBrush}"
-                                     Opacity="0.7"/>
+                        <StackPanel Grid.Row="1" Margin="16,16">
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Ports:" FontSize="11" 
+                                         Foreground="{DynamicResource SecondaryTextBrush}"
+                                         Opacity="0.7" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="1" Text="1025, 8025" FontSize="11" 
+                                         FontFamily="Consolas"
+                                         Foreground="{DynamicResource AccentBrush}"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="UI:" FontSize="11" 
+                                         Foreground="{DynamicResource SecondaryTextBrush}"
+                                         Opacity="0.7" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="1" Text="http://localhost:8025" FontSize="11" 
+                                         Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </Grid>
                         </StackPanel>
 
                         <!-- Action Buttons -->
-                        <Border Grid.Row="2" Background="#080C12" Padding="12,8">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <Button Grid.Column="0" Command="{Binding StartMailpitCommand}" 
-                                      Style="{StaticResource MaterialDesignFlatButton}"
-                                      Height="28" Padding="0" Margin="0,0,4,0"
-                                      IsEnabled="{Binding CanStartMailpit}">
-                                    <materialDesign:PackIcon Kind="Play" Width="18" Height="18"/>
+                        <Border Grid.Row="2" Background="#0A0F1A" 
+                                CornerRadius="0,0,4,4" Padding="8">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Command="{Binding StartMailpitCommand}" 
+                                      Style="{StaticResource ServiceActionButton}"
+                                      IsEnabled="{Binding CanStartMailpit}"
+                                      ToolTip="Start Service (Ctrl+3)">
+                                    <Grid>
+                                        <materialDesign:PackIcon Kind="Play" Width="16" Height="16">
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="materialDesign:PackIcon">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMailpitLoading}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+                                        </materialDesign:PackIcon>
+                                        <materialDesign:PackIcon Kind="CircleOutline" Width="16" Height="16">
+                                            <materialDesign:PackIcon.RenderTransform>
+                                                <RotateTransform CenterX="8" CenterY="8"/>
+                                            </materialDesign:PackIcon.RenderTransform>
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="materialDesign:PackIcon">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMailpitLoading}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                            <DataTrigger.EnterActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard RepeatBehavior="Forever">
+                                                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle"
+                                                                                       From="0" To="360" Duration="0:0:1"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </DataTrigger.EnterActions>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+                                        </materialDesign:PackIcon>
+                                    </Grid>
                                 </Button>
                                 
-                                <Button Grid.Column="1" Command="{Binding StopMailpitCommand}" 
-                                      Style="{StaticResource MaterialDesignFlatButton}"
-                                      Height="28" Padding="0" Margin="0,0,4,0"
-                                      IsEnabled="{Binding CanStopMailpit}">
-                                    <materialDesign:PackIcon Kind="Stop" Width="18" Height="18"/>
+                                <Button Command="{Binding StopMailpitCommand}" 
+                                      Style="{StaticResource ServiceActionButton}"
+                                      IsEnabled="{Binding CanStopMailpit}"
+                                      ToolTip="Stop Service">
+                                    <materialDesign:PackIcon Kind="Stop" Width="16" Height="16"/>
                                 </Button>
                                 
-                                <Button Grid.Column="2" Command="{Binding RestartMailpitCommand}" 
-                                      Style="{StaticResource MaterialDesignFlatButton}"
-                                      Height="28" Padding="0"
-                                      IsEnabled="{Binding CanRestartMailpit}">
-                                    <materialDesign:PackIcon Kind="Restart" Width="18" Height="18"/>
+                                <Button Command="{Binding RestartMailpitCommand}" 
+                                      Style="{StaticResource ServiceActionButton}"
+                                      IsEnabled="{Binding CanRestartMailpit}"
+                                      ToolTip="Restart Service">
+                                    <materialDesign:PackIcon Kind="Restart" Width="16" Height="16"/>
                                 </Button>
-                            </Grid>
+                            </StackPanel>
                         </Border>
                     </Grid>
                 </materialDesign:Card>
@@ -331,7 +687,7 @@
                 <!-- Quick Actions Card -->
                 <materialDesign:Card Grid.Column="0" Margin="0,0,12,0" 
                                    Background="#1C2635"
-                                   Style="{StaticResource HoverCardStyle}">
+                                   Style="{StaticResource ModernCardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -339,15 +695,17 @@
                         </Grid.RowDefinitions>
 
                         <!-- Header -->
-                        <Border Grid.Row="0" Background="#080C12" Padding="20,16">
+                        <Border Grid.Row="0" Background="#0F1420" 
+                                CornerRadius="4,4,0,0" Padding="20,16">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="RocketLaunch" Width="24" Height="24" 
                                                        Foreground="{DynamicResource AccentBrush}"
-                                                       VerticalAlignment="Center"/>
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,12,0"/>
                                 <TextBlock Text="Quick Actions" FontSize="18" 
-                                         FontWeight="Medium" 
+                                         FontWeight="SemiBold" 
                                          Foreground="{DynamicResource PrimaryTextBrush}"
-                                         Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                         VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
@@ -480,7 +838,7 @@
                 <!-- System Information Card -->
                 <materialDesign:Card Grid.Column="1" 
                                    Background="#1C2635"
-                                   Style="{StaticResource HoverCardStyle}">
+                                   Style="{StaticResource ModernCardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -488,15 +846,17 @@
                         </Grid.RowDefinitions>
 
                         <!-- Header -->
-                        <Border Grid.Row="0" Background="#080C12" Padding="20,16">
+                        <Border Grid.Row="0" Background="#0F1420" 
+                                CornerRadius="4,4,0,0" Padding="20,16">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="InformationCircle" Width="24" Height="24" 
                                                        Foreground="{DynamicResource AccentBrush}"
-                                                       VerticalAlignment="Center"/>
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,12,0"/>
                                 <TextBlock Text="System Information" FontSize="18" 
-                                         FontWeight="Medium"
+                                         FontWeight="SemiBold"
                                          Foreground="{DynamicResource PrimaryTextBrush}"
-                                         Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                         VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
@@ -512,7 +872,8 @@
 
                             <!-- Installation Path -->
                             <Border Grid.Row="0" Padding="12,10" Margin="0,0,0,8"
-                                  Background="#080C12">
+                                  Background="#0A0F1A"
+                                  CornerRadius="6">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -537,7 +898,10 @@
 
                             <!-- PHP Version -->
                             <Border Grid.Row="1" Padding="12,10" Margin="0,0,0,8"
-                                  Background="#080C12">
+                                  Background="Transparent"
+                                  BorderBrush="#2A3545"
+                                  BorderThickness="1"
+                                  CornerRadius="6">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -561,7 +925,8 @@
 
                             <!-- Apache Version -->
                             <Border Grid.Row="2" Padding="12,10" Margin="0,0,0,8"
-                                  Background="#080C12">
+                                  Background="#0A0F1A"
+                                  CornerRadius="6">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -585,7 +950,10 @@
 
                             <!-- MariaDB Version -->
                             <Border Grid.Row="3" Padding="12,10"
-                                  Background="#080C12">
+                                  Background="Transparent"
+                                  BorderBrush="#2A3545"
+                                  BorderThickness="1"
+                                  CornerRadius="6">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>

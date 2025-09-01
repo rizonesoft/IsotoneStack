@@ -8,8 +8,8 @@
     <ApplicationIcon>../assets/isotone.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <StartupObject>Isotone.App</StartupObject>
-    <AssemblyVersion>2025.9.1.20</AssemblyVersion>
-    <FileVersion>2025.9.1.20</FileVersion>
+    <AssemblyVersion>2025.9.1.22</AssemblyVersion>
+    <FileVersion>2025.9.1.22</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
