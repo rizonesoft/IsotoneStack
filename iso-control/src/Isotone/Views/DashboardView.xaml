@@ -1,0 +1,616 @@
+<UserControl x:Class="Isotone.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1200">
+    
+    <UserControl.Resources>
+        <!-- Card Hover Effect Style with Cyan Accent on Hover -->
+        <Style x:Key="HoverCardStyle" TargetType="materialDesign:Card" BasedOn="{StaticResource {x:Type materialDesign:Card}}">
+            <Setter Property="ClipToBounds" Value="False"/>
+            <Setter Property="UniformCornerRadius" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="materialDesign:Card">
+                        <Border x:Name="CardBorder"
+                              Background="{TemplateBinding Background}"
+                              BorderBrush="#2A3250"
+                              BorderThickness="1"
+                              CornerRadius="0"
+                              Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CardBorder" Property="BorderBrush" Value="#22D3EE"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    
+    <!-- Simple Background -->
+    <Grid Background="#0F1829">
+        <!-- Main Content -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <TextBlock Grid.Row="0" 
+                       Text="Dashboard" 
+                       FontSize="32" 
+                       FontWeight="Light"
+                       Foreground="{DynamicResource PrimaryTextBrush}"
+                       Margin="0,0,0,24"/>
+
+            <!-- Service Status Cards -->
+            <Grid Grid.Row="1" Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Apache Card -->
+                <materialDesign:Card Grid.Column="0" Margin="0,0,12,0" 
+                                   Background="#1C2635"
+                                   Style="{StaticResource HoverCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Service Header -->
+                        <Border Grid.Row="0" Background="#080C12" Padding="16,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <materialDesign:PackIcon Grid.Column="0" Kind="Web" 
+                                                       Width="28" Height="28" 
+                                                       Foreground="{Binding ApacheStatusColor}"
+                                                       VerticalAlignment="Center"/>
+                                
+                                <TextBlock Grid.Column="1" Text="Apache HTTP Server" 
+                                         FontSize="16" FontWeight="Medium" 
+                                         Margin="12,0,0,0" VerticalAlignment="Center"
+                                         Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                
+                                <!-- Status Indicator -->
+                                <Border Grid.Column="2" Padding="8,4">
+                                    <Border.Background>
+                                        <SolidColorBrush Color="Black" Opacity="0.3"/>
+                                    </Border.Background>
+                                    <TextBlock Text="{Binding ApacheStatus}" 
+                                             FontSize="11" FontWeight="Medium"
+                                             Foreground="{Binding ApacheStatusColor}"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Service Info -->
+                        <StackPanel Grid.Row="1" Margin="16,12">
+                            <TextBlock Text="Web Server" FontSize="12" 
+                                     Foreground="{DynamicResource SecondaryTextBrush}"
+                                     Margin="0,0,0,4"/>
+                            <TextBlock Text="Port: 80, 443" FontSize="11" 
+                                     Foreground="{DynamicResource SecondaryTextBrush}"
+                                     Opacity="0.7"/>
+                        </StackPanel>
+
+                        <!-- Action Buttons -->
+                        <Border Grid.Row="2" Background="#080C12" Padding="12,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <Button Grid.Column="0" Command="{Binding StartApacheCommand}" 
+                                      Style="{StaticResource MaterialDesignFlatButton}"
+                                      Height="28" Padding="0" Margin="0,0,4,0"
+                                      IsEnabled="{Binding CanStartApache}">
+                                    <materialDesign:PackIcon Kind="Play" Width="18" Height="18"/>
+                                </Button>
+                                
+                                <Button Grid.Column="1" Command="{Binding StopApacheCommand}" 
+                                      Style="{StaticResource MaterialDesignFlatButton}"
+                                      Height="28" Padding="0" Margin="0,0,4,0"
+                                      IsEnabled="{Binding CanStopApache}">
+                                    <materialDesign:PackIcon Kind="Stop" Width="18" Height="18"/>
+                                </Button>
+                                
+                                <Button Grid.Column="2" Command="{Binding RestartApacheCommand}" 
+                                      Style="{StaticResource MaterialDesignFlatButton}"
+                                      Height="28" Padding="0"
+                                      IsEnabled="{Binding CanRestartApache}">
+                                    <materialDesign:PackIcon Kind="Restart" Width="18" Height="18"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!-- MariaDB Card -->
+                <materialDesign:Card Grid.Column="1" Margin="0,0,12,0" 
+                                   Background="#1C2635"
+                                   Style="{StaticResource HoverCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Service Header -->
+                        <Border Grid.Row="0" Background="#080C12" Padding="16,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <materialDesign:PackIcon Grid.Column="0" Kind="Database" 
+                                                       Width="28" Height="28" 
+                                                       Foreground="{Binding MariaDBStatusColor}"
+                                                       VerticalAlignment="Center"/>
+                                
+                                <TextBlock Grid.Column="1" Text="MariaDB Database" 
+                                         FontSize="16" FontWeight="Medium" 
+                                         Margin="12,0,0,0" VerticalAlignment="Center"
+                                         Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                
+                                <!-- Status Indicator -->
+                                <Border Grid.Column="2" Padding="8,4">
+                                    <Border.Background>
+                                        <SolidColorBrush Color="Black" Opacity="0.3"/>
+                                    </Border.Background>
+                                    <TextBlock Text="{Binding MariaDBStatus}" 
+                                             FontSize="11" FontWeight="Medium"
+                                             Foreground="{Binding MariaDBStatusColor}"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Service Info -->
+                        <StackPanel Grid.Row="1" Margin="16,12">
+                            <TextBlock Text="Database Server" FontSize="12" 
+                                     Foreground="{DynamicResource SecondaryTextBrush}"
+                                     Margin="0,0,0,4"/>
+                            <TextBlock Text="Port: 3306" FontSize="11" 
+                                     Foreground="{DynamicResource SecondaryTextBrush}"
+                                     Opacity="0.7"/>
+                        </StackPanel>
+
+                        <!-- Action Buttons -->
+                        <Border Grid.Row="2" Background="#080C12" Padding="12,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <Button Grid.Column="0" Command="{Binding StartMariaDBCommand}" 
+                                      Style="{StaticResource MaterialDesignFlatButton}"
+                                      Height="28" Padding="0" Margin="0,0,4,0"
+                                      IsEnabled="{Binding CanStartMariaDB}">
+                                    <materialDesign:PackIcon Kind="Play" Width="18" Height="18"/>
+                                </Button>
+                                
+                                <Button Grid.Column="1" Command="{Binding StopMariaDBCommand}" 
+                                      Style="{StaticResource MaterialDesignFlatButton}"
+                                      Height="28" Padding="0" Margin="0,0,4,0"
+                                      IsEnabled="{Binding CanStopMariaDB}">
+                                    <materialDesign:PackIcon Kind="Stop" Width="18" Height="18"/>
+                                </Button>
+                                
+                                <Button Grid.Column="2" Command="{Binding RestartMariaDBCommand}" 
+                                      Style="{StaticResource MaterialDesignFlatButton}"
+                                      Height="28" Padding="0"
+                                      IsEnabled="{Binding CanRestartMariaDB}">
+                                    <materialDesign:PackIcon Kind="Restart" Width="18" Height="18"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!-- Mailpit Card -->
+                <materialDesign:Card Grid.Column="2" 
+                                   Background="#1C2635"
+                                   Style="{StaticResource HoverCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Service Header -->
+                        <Border Grid.Row="0" Background="#080C12" Padding="16,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <materialDesign:PackIcon Grid.Column="0" Kind="Email" 
+                                                       Width="28" Height="28" 
+                                                       Foreground="{Binding MailpitStatusColor}"
+                                                       VerticalAlignment="Center"/>
+                                
+                                <TextBlock Grid.Column="1" Text="Mailpit Server" 
+                                         FontSize="16" FontWeight="Medium" 
+                                         Margin="12,0,0,0" VerticalAlignment="Center"
+                                         Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                
+                                <!-- Status Indicator -->
+                                <Border Grid.Column="2" Padding="8,4">
+                                    <Border.Background>
+                                        <SolidColorBrush Color="Black" Opacity="0.3"/>
+                                    </Border.Background>
+                                    <TextBlock Text="{Binding MailpitStatus}" 
+                                             FontSize="11" FontWeight="Medium"
+                                             Foreground="{Binding MailpitStatusColor}"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Service Info -->
+                        <StackPanel Grid.Row="1" Margin="16,12">
+                            <TextBlock Text="Email Testing" FontSize="12" 
+                                     Foreground="{DynamicResource SecondaryTextBrush}"
+                                     Margin="0,0,0,4"/>
+                            <TextBlock Text="Port: 1025, 8025" FontSize="11" 
+                                     Foreground="{DynamicResource SecondaryTextBrush}"
+                                     Opacity="0.7"/>
+                        </StackPanel>
+
+                        <!-- Action Buttons -->
+                        <Border Grid.Row="2" Background="#080C12" Padding="12,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <Button Grid.Column="0" Command="{Binding StartMailpitCommand}" 
+                                      Style="{StaticResource MaterialDesignFlatButton}"
+                                      Height="28" Padding="0" Margin="0,0,4,0"
+                                      IsEnabled="{Binding CanStartMailpit}">
+                                    <materialDesign:PackIcon Kind="Play" Width="18" Height="18"/>
+                                </Button>
+                                
+                                <Button Grid.Column="1" Command="{Binding StopMailpitCommand}" 
+                                      Style="{StaticResource MaterialDesignFlatButton}"
+                                      Height="28" Padding="0" Margin="0,0,4,0"
+                                      IsEnabled="{Binding CanStopMailpit}">
+                                    <materialDesign:PackIcon Kind="Stop" Width="18" Height="18"/>
+                                </Button>
+                                
+                                <Button Grid.Column="2" Command="{Binding RestartMailpitCommand}" 
+                                      Style="{StaticResource MaterialDesignFlatButton}"
+                                      Height="28" Padding="0"
+                                      IsEnabled="{Binding CanRestartMailpit}">
+                                    <materialDesign:PackIcon Kind="Restart" Width="18" Height="18"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+
+            <!-- Quick Actions and Information -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Quick Actions Card -->
+                <materialDesign:Card Grid.Column="0" Margin="0,0,12,0" 
+                                   Background="#1C2635"
+                                   Style="{StaticResource HoverCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <Border Grid.Row="0" Background="#080C12" Padding="20,16">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="RocketLaunch" Width="24" Height="24" 
+                                                       Foreground="{DynamicResource AccentBrush}"
+                                                       VerticalAlignment="Center"/>
+                                <TextBlock Text="Quick Actions" FontSize="18" 
+                                         FontWeight="Medium" 
+                                         Foreground="{DynamicResource PrimaryTextBrush}"
+                                         Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Actions -->
+                        <StackPanel Grid.Row="1" Margin="20,16,20,20">
+                            <!-- Service Controls -->
+                            <TextBlock Text="SERVICE CONTROLS" FontSize="10" 
+                                     Foreground="{DynamicResource SecondaryTextBrush}"
+                                     Opacity="0.7" Margin="0,0,0,8"/>
+                            
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="8"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                
+                                <Button Grid.Column="0" Grid.Row="0"
+                                      Command="{Binding StartAllServicesCommand}" 
+                                      Style="{StaticResource MaterialDesignRaisedButton}"
+                                      Height="36" Background="#1B5E20" BorderBrush="#1B5E20">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="PlayCircle" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="START ALL" FontSize="11"/>
+                                    </StackPanel>
+                                </Button>
+                                
+                                <Button Grid.Column="2" Grid.Row="0"
+                                      Command="{Binding StopAllServicesCommand}" 
+                                      Style="{StaticResource MaterialDesignRaisedButton}"
+                                      Height="36" Background="#B71C1C" BorderBrush="#B71C1C">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="StopCircle" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="STOP ALL" FontSize="11"/>
+                                    </StackPanel>
+                                </Button>
+                                
+                                <Button Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2"
+                                      Command="{Binding RestartAllServicesCommand}" 
+                                      Style="{StaticResource MaterialDesignOutlinedButton}"
+                                      Height="36" BorderBrush="{DynamicResource AccentBrush}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Restart" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="RESTART ALL SERVICES" FontSize="11"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <!-- Web Actions -->
+                            <TextBlock Text="WEB ACTIONS" FontSize="10" 
+                                     Foreground="{DynamicResource SecondaryTextBrush}"
+                                     Opacity="0.7" Margin="0,0,0,8"/>
+                            
+                            <Button Command="{Binding OpenLocalhostCommand}" 
+                                  Style="{StaticResource MaterialDesignOutlinedButton}"
+                                  HorizontalAlignment="Stretch"
+                                  Height="36" Margin="0,0,0,4"
+                                  BorderBrush="#22D3EE">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Web" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Open Localhost" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Command="{Binding OpenPhpMyAdminCommand}" 
+                                  Style="{StaticResource MaterialDesignOutlinedButton}"
+                                  HorizontalAlignment="Stretch"
+                                  Height="36" Margin="0,0,0,4"
+                                  BorderBrush="#22D3EE">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Database" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Open phpMyAdmin" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Command="{Binding OpenMailpitCommand}" 
+                                  Style="{StaticResource MaterialDesignOutlinedButton}"
+                                  HorizontalAlignment="Stretch"
+                                  Height="36" Margin="0,0,0,16"
+                                  BorderBrush="#22D3EE">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Email" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Open Mailpit" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- System Actions -->
+                            <TextBlock Text="SYSTEM ACTIONS" FontSize="10" 
+                                     Foreground="{DynamicResource SecondaryTextBrush}"
+                                     Opacity="0.7" Margin="0,0,0,8"/>
+                            
+                            <Button Command="{Binding OpenProjectFolderCommand}" 
+                                  Style="{StaticResource MaterialDesignFlatButton}"
+                                  HorizontalAlignment="Stretch"
+                                  Height="32" Margin="0,0,0,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FolderOpen" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Open Project Folder" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Command="{Binding OpenHostsFileCommand}" 
+                                  Style="{StaticResource MaterialDesignFlatButton}"
+                                  HorizontalAlignment="Stretch"
+                                  Height="32" Margin="0,0,0,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FileEdit" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Edit Hosts File" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Command="{Binding RefreshServicesCommand}" 
+                                  Style="{StaticResource MaterialDesignFlatButton}"
+                                  HorizontalAlignment="Stretch"
+                                  Height="32">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Refresh" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Refresh Services" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!-- System Information Card -->
+                <materialDesign:Card Grid.Column="1" 
+                                   Background="#1C2635"
+                                   Style="{StaticResource HoverCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <Border Grid.Row="0" Background="#080C12" Padding="20,16">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="InformationCircle" Width="24" Height="24" 
+                                                       Foreground="{DynamicResource AccentBrush}"
+                                                       VerticalAlignment="Center"/>
+                                <TextBlock Text="System Information" FontSize="18" 
+                                         FontWeight="Medium"
+                                         Foreground="{DynamicResource PrimaryTextBrush}"
+                                         Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Information Grid -->
+                        <Grid Grid.Row="1" Margin="20,16,20,20">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Installation Path -->
+                            <Border Grid.Row="0" Padding="12,10" Margin="0,0,0,8"
+                                  Background="#080C12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <materialDesign:PackIcon Grid.Column="0" Kind="Folder" 
+                                                           Width="20" Height="20"
+                                                           Foreground="{DynamicResource AccentBrush}"
+                                                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Installation Path" FontSize="11" 
+                                                 Foreground="{DynamicResource SecondaryTextBrush}"
+                                                 Opacity="0.7" Margin="0,0,0,2"/>
+                                        <TextBlock Text="{Binding IsotonePath}" 
+                                                 TextWrapping="Wrap" FontSize="13"
+                                                 Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- PHP Version -->
+                            <Border Grid.Row="1" Padding="12,10" Margin="0,0,0,8"
+                                  Background="#080C12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <materialDesign:PackIcon Grid.Column="0" Kind="LanguagePhp" 
+                                                           Width="20" Height="20"
+                                                           Foreground="#4ADE80"
+                                                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="PHP Version" FontSize="11" 
+                                                 Foreground="{DynamicResource SecondaryTextBrush}"
+                                                 Opacity="0.7" Margin="0,0,0,2"/>
+                                        <TextBlock Text="{Binding PhpVersion}" FontSize="13"
+                                                 Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Apache Version -->
+                            <Border Grid.Row="2" Padding="12,10" Margin="0,0,0,8"
+                                  Background="#080C12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <materialDesign:PackIcon Grid.Column="0" Kind="Web" 
+                                                           Width="20" Height="20"
+                                                           Foreground="#FFA726"
+                                                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Apache Version" FontSize="11" 
+                                                 Foreground="{DynamicResource SecondaryTextBrush}"
+                                                 Opacity="0.7" Margin="0,0,0,2"/>
+                                        <TextBlock Text="{Binding ApacheVersion}" FontSize="13"
+                                                 Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- MariaDB Version -->
+                            <Border Grid.Row="3" Padding="12,10"
+                                  Background="#080C12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <materialDesign:PackIcon Grid.Column="0" Kind="Database" 
+                                                           Width="20" Height="20"
+                                                           Foreground="#E91E63"
+                                                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="MariaDB Version" FontSize="11" 
+                                                 Foreground="{DynamicResource SecondaryTextBrush}"
+                                                 Opacity="0.7" Margin="0,0,0,2"/>
+                                        <TextBlock Text="{Binding MariaDBVersion}" FontSize="13"
+                                                 Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+        </Grid>
+    </ScrollViewer>
+    </Grid>
+</UserControl>

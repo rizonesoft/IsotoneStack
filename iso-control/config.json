@@ -1,0 +1,10 @@
+{
+  "IsotonePath": "C:\\isotone",
+  "AutoStartServices": false,
+  "MinimizeToTray": true,
+  "AutoCheckUpdates": true,
+  "ApachePort": 80,
+  "ApacheSSLPort": 443,
+  "MariaDBPort": 3306,
+  "MailpitPort": 8025
+}

@@ -1,0 +1,63 @@
+<UserControl x:Class="Isotone.Views.LogsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1200"
+             Background="{DynamicResource PrimaryBackgroundBrush}">
+    
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0" 
+                   Text="Logs" 
+                   FontSize="32" 
+                   FontWeight="Light"
+                   Foreground="{DynamicResource PrimaryTextBrush}"
+                   Margin="0,0,0,24"/>
+
+        <!-- Log Selection -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,16">
+            <ComboBox Width="200" Margin="0,0,16,0"
+                      materialDesign:HintAssist.Hint="Select Log File"
+                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                      SelectedItem="{Binding SelectedLogFile}"
+                      ItemsSource="{Binding LogFiles}"/>
+            
+            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                    Command="{Binding RefreshCommand}"
+                    Margin="0,0,8,0">
+                <materialDesign:PackIcon Kind="Refresh"/>
+            </Button>
+            
+            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Command="{Binding ClearLogCommand}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Delete" Margin="0,0,8,0"/>
+                    <TextBlock Text="Clear"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!-- Log Content -->
+        <materialDesign:Card Grid.Row="2" Padding="0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <TextBox Text="{Binding LogContent}" 
+                       IsReadOnly="True"
+                       FontFamily="Consolas"
+                       FontSize="12"
+                       Background="{DynamicResource SecondaryBackgroundBrush}"
+                       Foreground="{DynamicResource PrimaryTextBrush}"
+                       BorderThickness="0"
+                       Padding="16"/>
+            </ScrollViewer>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>
