@@ -35,6 +35,26 @@ if %errorlevel% neq 0 (
 - ✅ Scripts should return proper exit codes (0 for success, non-zero for failure)
 - ✅ Use approved verbs for function names (Get-, Set-, Start-, Stop-, etc.)
 
+### C# Control Panel Development Rules
+- ✅ Control Panel source code is in `.\iso-control\src\`
+- ✅ Solution file: `.\iso-control\src\Isotone.sln`
+- ✅ Main project: `.\iso-control\src\Isotone\Isotone.csproj`
+- ✅ Application icon: `.\iso-control\src\assets\isotone.ico`
+- ✅ Target Framework: .NET 8.0 Windows (net8.0-windows)
+- ✅ Use WinForms for UI (not WPF)
+- ✅ Always request Administrator privileges via app.manifest
+- ✅ Use relative paths in project files (e.g., `..\..\assets\isotone.ico`)
+- ✅ Service names: IsotoneApache, IsotoneMariaDB, IsotoneMailpit
+- ✅ All Control Panel data stored in `C:\isotone\iso-control\`:
+  - Configuration: `.\iso-control\control-panel.json`
+  - Cache files: `.\iso-control\cache\`
+  - User settings: `.\iso-control\settings\`
+  - Logs: `.\iso-control\logs\`
+- ✅ Use async/await for long-running operations
+- ✅ Implement proper error handling and logging
+- ✅ Support system tray minimization
+- ✅ Use dark theme by default
+
 ### Project Structure
 - `apache24/` - Bundled Apache HTTP Server
 - `php/` - Bundled PHP runtime
@@ -47,7 +67,20 @@ if %errorlevel% neq 0 (
 - `scripts/` - PowerShell scripts and batch launchers
   - `_Template.ps1` - Template for new PowerShell scripts
   - `_Template.ps1.bat` - Template for PowerShell batch launchers
-- `control-panel/` - Control Panel application (C# WPF/WinForms)
+- `iso-control/` - Control Panel application (C# WinForms .NET 8)
+  - `src/` - Source code directory
+    - `assets/` - Application assets (isotone.ico)
+    - `Isotone.sln` - Visual Studio solution file
+    - `Isotone/` - Main project directory
+      - `Isotone.csproj` - Project file
+      - `app.manifest` - Application manifest
+      - `Program.cs` - Entry point
+      - `FormMain.cs` - Main window
+      - `Controls/` - User control panels
+      - `Services/` - Service management
+      - `Models/` - Data models
+      - `Utilities/` - Helper classes
+      - `Resources/Icons/` - Icon resources
 - `logs/isotone/` - All script logs with timestamps
 - `licenses/` - Open source licenses for all components
 - `www/` - Web root directory (USER CONTENT - COMPLETELY IGNORE THIS FOLDER)

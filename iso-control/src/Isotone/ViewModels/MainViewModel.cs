@@ -255,7 +255,7 @@ namespace Isotone.ViewModels
                     DiskFreeSpace = "Disk information unavailable";
                 }
 
-                await System.Threading.Tasks.Task.Delay(3000); // Update every 3 seconds
+                await System.Threading.Tasks.Task.Delay(2000); // Update every 2 seconds
             }
         }
 

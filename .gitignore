@@ -6,7 +6,7 @@
 # =====================================
 *.log
 /logs/**/*.log
-/control-panel/logs/*.log
+/iso-control/logs/*.log
 
 # =====================================
 # Temporary files - Created during runtime
@@ -60,32 +60,148 @@
 !/www/default/
 
 # =====================================
-# Python virtual environment - Created during setup
+# Visual Studio / C# .NET
 # =====================================
-/control-panel/venv/
-/control-panel/__pycache__/
-/control-panel/**/__pycache__/
-/control-panel/build
-/control-panel/dist
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio cache/options directory
+.vs/
+.vscode/
+
+## .NET
+project.lock.json
+project.fragment.lock.json
+artifacts/
+**/Properties/launchSettings.json
+
+## NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+.nuget/
+
+## Files built by Visual Studio
+*_i.c
+*_p.c
+*_h.h
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp_proj
+*_wpftmp.csproj
+*.tlog
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+## Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+## ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+## TeamCity
+_TeamCity*
+
+## DotCover
+*.dotCover
+
+## NCrunch
+_NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+
+## Publish profiles
+PublishProfiles/
+*.pubxml
+*.publishproj
+
+## Web publish
+*.Publish.xml
+*.azurePubxml
+
+## Windows Store app package directories and files
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_pkginfo.txt
+*.appx
+*.appxbundle
+*.appxupload
+
+## Backup files
+*.bak
+*~
+*.orig
+
+## Python (legacy) - Created during setup
+# =====================================
+/iso-control/venv/
+/iso-control/__pycache__/
+/iso-control/**/__pycache__/
+/iso-control/build
+/iso-control/dist
 *.pyc
 
 /scripts/__pycache__/
 
 # =====================================
-# User configuration - Created after setup
+# Control Panel runtime data - Created after setup
 # =====================================
-/control-panel/config/settings.json
-/control-panel/config/user_settings.json
+/iso-control/control-panel.json
+/iso-control/cache/
+/iso-control/settings/
+/iso-control/logs/
+/iso-control/*.log
 
 # =====================================
 # IDE files - Created by editors
 # =====================================
 .claude/
-.vscode/
 .idea/
 *.swp
 *.swo
-*~
 
 # =====================================
 # OS files - Created by Windows
