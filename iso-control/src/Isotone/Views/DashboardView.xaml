@@ -6,19 +6,16 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:converters="clr-namespace:Isotone.Converters"
              mc:Ignorable="d" 
-             d:DesignHeight="800" d:DesignWidth="1200">
+             d:DesignHeight="800" d:DesignWidth="1200"
+             UseLayoutRounding="True"
+             TextOptions.TextFormattingMode="Ideal">
     
     <UserControl.Resources>
         <!-- Enhanced Card Style with Modern Effects -->
         <Style x:Key="ModernCardStyle" TargetType="materialDesign:Card" BasedOn="{StaticResource {x:Type materialDesign:Card}}">
             <Setter Property="ClipToBounds" Value="False"/>
             <Setter Property="UniformCornerRadius" Value="4"/>
-            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
-            <Setter Property="RenderTransform">
-                <Setter.Value>
-                    <ScaleTransform ScaleX="1" ScaleY="1"/>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="UseLayoutRounding" Value="True"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="materialDesign:Card">
@@ -61,16 +58,17 @@
                                   BorderBrush="#2A3545"
                                   BorderThickness="1"
                                   CornerRadius="4"
-                                  Padding="{TemplateBinding Padding}">
+                                  Padding="{TemplateBinding Padding}"
+                                  UseLayoutRounding="True">
                                 <Border.Effect>
                                     <DropShadowEffect x:Name="CardShadow" 
                                                     Color="Black" 
                                                     Direction="270" 
                                                     ShadowDepth="2" 
-                                                    Opacity="0.2" 
-                                                    BlurRadius="8"/>
+                                                    Opacity="0.15" 
+                                                    BlurRadius="6"/>
                                 </Border.Effect>
-                                <ContentPresenter/>
+                                <ContentPresenter UseLayoutRounding="True"/>
                             </Border>
                         </Grid>
                         
@@ -84,22 +82,13 @@
                                                           To="#22D3EE" Duration="0:0:0.3"/>
                                             <DoubleAnimation Storyboard.TargetName="CardShadow"
                                                            Storyboard.TargetProperty="ShadowDepth"
-                                                           To="4" Duration="0:0:0.3"/>
+                                                           To="6" Duration="0:0:0.2"/>
                                             <DoubleAnimation Storyboard.TargetName="CardShadow"
                                                            Storyboard.TargetProperty="BlurRadius"
-                                                           To="12" Duration="0:0:0.3"/>
-                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX"
-                                                           To="1.01" Duration="0:0:0.3">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <CubicEase EasingMode="EaseOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY"
-                                                           To="1.01" Duration="0:0:0.3">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <CubicEase EasingMode="EaseOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
+                                                           To="16" Duration="0:0:0.2"/>
+                                            <DoubleAnimation Storyboard.TargetName="CardShadow"
+                                                           Storyboard.TargetProperty="Opacity"
+                                                           To="0.25" Duration="0:0:0.2"/>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.EnterActions>
@@ -114,19 +103,10 @@
                                                            To="2" Duration="0:0:0.3"/>
                                             <DoubleAnimation Storyboard.TargetName="CardShadow"
                                                            Storyboard.TargetProperty="BlurRadius"
-                                                           To="8" Duration="0:0:0.3"/>
-                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX"
-                                                           To="1" Duration="0:0:0.3">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <CubicEase EasingMode="EaseOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY"
-                                                           To="1" Duration="0:0:0.3">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <CubicEase EasingMode="EaseOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
+                                                           To="6" Duration="0:0:0.2"/>
+                                            <DoubleAnimation Storyboard.TargetName="CardShadow"
+                                                           Storyboard.TargetProperty="Opacity"
+                                                           To="0.15" Duration="0:0:0.2"/>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.ExitActions>
@@ -287,6 +267,19 @@
                                 <TextBlock Grid.Column="1" Text="Configured" FontSize="11" 
                                          Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </Grid>
+                            
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Version:" FontSize="11" 
+                                         Foreground="{DynamicResource SecondaryTextBrush}"
+                                         Opacity="0.7" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="1" Text="{Binding ApacheVersion}" FontSize="11" 
+                                         FontFamily="Consolas"
+                                         Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </Grid>
                         </Grid>
 
                         <!-- Action Buttons -->
@@ -296,7 +289,7 @@
                                 <Button Command="{Binding StartApacheCommand}" 
                                       Style="{StaticResource ServiceActionButton}"
                                       IsEnabled="{Binding CanStartApache}"
-                                      ToolTip="Start Service (Ctrl+1)">
+                                      ToolTip="Start Service">
                                     <Grid>
                                         <materialDesign:PackIcon Kind="Play" Width="16" Height="16">
                                             <materialDesign:PackIcon.Style>
@@ -348,6 +341,47 @@
                                       IsEnabled="{Binding CanRestartApache}"
                                       ToolTip="Restart Service">
                                     <materialDesign:PackIcon Kind="Restart" Width="16" Height="16"/>
+                                </Button>
+                                
+                                <Border Width="1" Height="20" Background="#2A3545" Margin="4,0"/>
+                                
+                                <Button Command="{Binding ConfigureApacheCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource ServiceActionButton}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsApacheInstalled}" Value="False">
+                                                    <Setter Property="ToolTip" Value="Install Service"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsApacheInstalled}" Value="True">
+                                                    <Setter Property="ToolTip" Value="Uninstall Service"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <materialDesign:PackIcon Width="16" Height="16">
+                                        <materialDesign:PackIcon.Style>
+                                            <Style TargetType="materialDesign:PackIcon">
+                                                <Setter Property="Kind" Value="Download"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsApacheInstalled}" Value="True">
+                                                        <Setter Property="Kind" Value="Delete"/>
+                                                        <Setter Property="Foreground" Value="#F44336"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </materialDesign:PackIcon.Style>
+                                    </materialDesign:PackIcon>
+                                </Button>
+                                
+                                <Border Width="1" Height="20" Background="#2A3545" Margin="4,0"/>
+                                
+                                <Button Command="{Binding OpenLocalhostCommand}" 
+                                      Style="{StaticResource ServiceActionButton}"
+                                      IsEnabled="{Binding IsApacheInstalled}"
+                                      ToolTip="Open Web Interface">
+                                    <materialDesign:PackIcon Kind="OpenInBrowser" Width="16" Height="16" 
+                                                           Foreground="{DynamicResource AccentBrush}"/>
                                 </Button>
                             </StackPanel>
                         </Border>
@@ -424,8 +458,14 @@
                         </Border>
 
                         <!-- Service Info -->
-                        <StackPanel Grid.Row="1" Margin="16,16">
-                            <Grid Margin="0,0,0,8">
+                        <Grid Grid.Row="1" Margin="16,16">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
@@ -437,7 +477,8 @@
                                          FontFamily="Consolas"
                                          Foreground="{DynamicResource AccentBrush}"/>
                             </Grid>
-                            <Grid>
+                            
+                            <Grid Grid.Row="1" Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
@@ -448,7 +489,20 @@
                                 <TextBlock Grid.Column="1" Text="Configured" FontSize="11" 
                                          Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </Grid>
-                        </StackPanel>
+                            
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Version:" FontSize="11" 
+                                         Foreground="{DynamicResource SecondaryTextBrush}"
+                                         Opacity="0.7" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="1" Text="{Binding MariaDBVersion}" FontSize="11" 
+                                         FontFamily="Consolas"
+                                         Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </Grid>
+                        </Grid>
 
                         <!-- Action Buttons -->
                         <Border Grid.Row="2" Background="#0A0F1A" 
@@ -457,7 +511,7 @@
                                 <Button Command="{Binding StartMariaDBCommand}" 
                                       Style="{StaticResource ServiceActionButton}"
                                       IsEnabled="{Binding CanStartMariaDB}"
-                                      ToolTip="Start Service (Ctrl+2)">
+                                      ToolTip="Start Service">
                                     <Grid>
                                         <materialDesign:PackIcon Kind="Play" Width="16" Height="16">
                                             <materialDesign:PackIcon.Style>
@@ -509,6 +563,47 @@
                                       IsEnabled="{Binding CanRestartMariaDB}"
                                       ToolTip="Restart Service">
                                     <materialDesign:PackIcon Kind="Restart" Width="16" Height="16"/>
+                                </Button>
+                                
+                                <Border Width="1" Height="20" Background="#2A3545" Margin="4,0"/>
+                                
+                                <Button Command="{Binding ConfigureMariaDBCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource ServiceActionButton}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMariaDBInstalled}" Value="False">
+                                                    <Setter Property="ToolTip" Value="Install Service"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsMariaDBInstalled}" Value="True">
+                                                    <Setter Property="ToolTip" Value="Uninstall Service"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <materialDesign:PackIcon Width="16" Height="16">
+                                        <materialDesign:PackIcon.Style>
+                                            <Style TargetType="materialDesign:PackIcon">
+                                                <Setter Property="Kind" Value="Download"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMariaDBInstalled}" Value="True">
+                                                        <Setter Property="Kind" Value="Delete"/>
+                                                        <Setter Property="Foreground" Value="#F44336"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </materialDesign:PackIcon.Style>
+                                    </materialDesign:PackIcon>
+                                </Button>
+                                
+                                <Border Width="1" Height="20" Background="#2A3545" Margin="4,0"/>
+                                
+                                <Button Command="{Binding OpenPhpMyAdminCommand}" 
+                                      Style="{StaticResource ServiceActionButton}"
+                                      IsEnabled="{Binding IsMariaDBInstalled}"
+                                      ToolTip="Open phpMyAdmin">
+                                    <materialDesign:PackIcon Kind="OpenInBrowser" Width="16" Height="16" 
+                                                           Foreground="{DynamicResource AccentBrush}"/>
                                 </Button>
                             </StackPanel>
                         </Border>
@@ -585,8 +680,14 @@
                         </Border>
 
                         <!-- Service Info -->
-                        <StackPanel Grid.Row="1" Margin="16,16">
-                            <Grid Margin="0,0,0,8">
+                        <Grid Grid.Row="1" Margin="16,16">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
@@ -598,18 +699,32 @@
                                          FontFamily="Consolas"
                                          Foreground="{DynamicResource AccentBrush}"/>
                             </Grid>
-                            <Grid>
+                            
+                            <Grid Grid.Row="1" Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="UI:" FontSize="11" 
+                                <TextBlock Grid.Column="0" Text="Status:" FontSize="11" 
                                          Foreground="{DynamicResource SecondaryTextBrush}"
                                          Opacity="0.7" Margin="0,0,8,0"/>
-                                <TextBlock Grid.Column="1" Text="http://localhost:8025" FontSize="11" 
+                                <TextBlock Grid.Column="1" Text="Configured" FontSize="11" 
                                          Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </Grid>
-                        </StackPanel>
+                            
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Version:" FontSize="11" 
+                                         Foreground="{DynamicResource SecondaryTextBrush}"
+                                         Opacity="0.7" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="1" Text="{Binding MailpitVersion}" FontSize="11" 
+                                         FontFamily="Consolas"
+                                         Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </Grid>
+                        </Grid>
 
                         <!-- Action Buttons -->
                         <Border Grid.Row="2" Background="#0A0F1A" 
@@ -618,7 +733,7 @@
                                 <Button Command="{Binding StartMailpitCommand}" 
                                       Style="{StaticResource ServiceActionButton}"
                                       IsEnabled="{Binding CanStartMailpit}"
-                                      ToolTip="Start Service (Ctrl+3)">
+                                      ToolTip="Start Service">
                                     <Grid>
                                         <materialDesign:PackIcon Kind="Play" Width="16" Height="16">
                                             <materialDesign:PackIcon.Style>
@@ -670,6 +785,47 @@
                                       IsEnabled="{Binding CanRestartMailpit}"
                                       ToolTip="Restart Service">
                                     <materialDesign:PackIcon Kind="Restart" Width="16" Height="16"/>
+                                </Button>
+                                
+                                <Border Width="1" Height="20" Background="#2A3545" Margin="4,0"/>
+                                
+                                <Button Command="{Binding ConfigureMailpitCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource ServiceActionButton}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMailpitInstalled}" Value="False">
+                                                    <Setter Property="ToolTip" Value="Install Service"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsMailpitInstalled}" Value="True">
+                                                    <Setter Property="ToolTip" Value="Uninstall Service"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <materialDesign:PackIcon Width="16" Height="16">
+                                        <materialDesign:PackIcon.Style>
+                                            <Style TargetType="materialDesign:PackIcon">
+                                                <Setter Property="Kind" Value="Download"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMailpitInstalled}" Value="True">
+                                                        <Setter Property="Kind" Value="Delete"/>
+                                                        <Setter Property="Foreground" Value="#F44336"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </materialDesign:PackIcon.Style>
+                                    </materialDesign:PackIcon>
+                                </Button>
+                                
+                                <Border Width="1" Height="20" Background="#2A3545" Margin="4,0"/>
+                                
+                                <Button Command="{Binding OpenMailpitCommand}" 
+                                      Style="{StaticResource ServiceActionButton}"
+                                      IsEnabled="{Binding IsMailpitInstalled}"
+                                      ToolTip="Open Mailpit Web UI">
+                                    <materialDesign:PackIcon Kind="OpenInBrowser" Width="16" Height="16" 
+                                                           Foreground="{DynamicResource AccentBrush}"/>
                                 </Button>
                             </StackPanel>
                         </Border>

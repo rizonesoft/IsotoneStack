@@ -13,8 +13,9 @@ namespace Isotone.Utilities
 
         public ConfigurationManager(string isotonePath)
         {
-            // Use the isotone path to find the config file
-            _configPath = Path.Combine(isotonePath, "iso-control", "config.json");
+            // Store config next to the executable for portability
+            var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            _configPath = Path.Combine(exeDir ?? ".", "config.json");
             _configuration = LoadConfiguration(isotonePath);
         }
 
@@ -80,7 +81,7 @@ namespace Isotone.Utilities
 
     public class Configuration
     {
-        public string IsotonePath { get; set; } = @"C:\isotone";
+        public string IsotonePath { get; set; } = @"R:\isotone";
         public bool AutoStartServices { get; set; }
         public bool MinimizeToTray { get; set; }
         public bool AutoCheckUpdates { get; set; }

@@ -11,7 +11,6 @@ namespace Isotone
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainViewModel();
         }
     }
 }

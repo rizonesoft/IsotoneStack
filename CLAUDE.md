@@ -55,6 +55,16 @@ if %errorlevel% neq 0 (
 - ✅ Support system tray minimization
 - ✅ Use dark theme by default
 
+### Development Environment
+- ✅ Apache/MariaDB/PHP run natively on Windows as services
+- ✅ Development/coding happens in WSL (Windows Subsystem for Linux)
+- ✅ File paths in WSL use `/mnt/c/isotone/` to access Windows `C:\isotone\`
+- ✅ Cannot run curl/test Apache from WSL - Apache is on Windows only
+- ✅ Use Windows browser to test: `http://localhost/` or `http://localhost:port/`
+
+### Deployment Target
+- ✅ This project will be deployed on SHARED HOSTING - configure accordingly (no Apache/system-level changes)
+
 ### Project Structure
 - `apache24/` - Bundled Apache HTTP Server
 - `php/` - Bundled PHP runtime

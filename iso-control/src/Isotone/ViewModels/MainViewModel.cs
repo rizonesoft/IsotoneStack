@@ -17,6 +17,7 @@ namespace Isotone.ViewModels
         private readonly ServiceManager _serviceManager;
         private readonly ConfigurationManager _configManager;
         private readonly ISnackbarMessageQueue _snackbarMessageQueue;
+        private readonly ViewCache _viewCache;
 
         [ObservableProperty]
         private object? currentView;
@@ -52,12 +53,35 @@ namespace Isotone.ViewModels
 
         public MainViewModel()
         {
-            // Get the isotone path dynamically - try environment variable first, then default
-            string isotonePath = Environment.GetEnvironmentVariable("ISOTONE_PATH") ?? @"C:\isotone";
+            // Get the isotone path dynamically - try environment variable first, then auto-detect, then default
+            string isotonePath = Environment.GetEnvironmentVariable("ISOTONE_PATH");
+            
+            if (string.IsNullOrEmpty(isotonePath))
+            {
+                // Auto-detect based on executable location
+                // Executable is in: R:\isotone\iso-control\bin\Debug\net8.0-windows\
+                // We need to go up to: R:\isotone\
+                var exeDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                if (!string.IsNullOrEmpty(exeDir))
+                {
+                    // Go up from bin\Debug\net8.0-windows to iso-control, then to isotone root
+                    var binDir = System.IO.Directory.GetParent(exeDir)?.Parent?.Parent?.FullName; // bin folder
+                    var isoControlDir = System.IO.Directory.GetParent(binDir ?? "")?.FullName; // iso-control folder
+                    isotonePath = System.IO.Directory.GetParent(isoControlDir ?? "")?.FullName ?? @"C:\isotone"; // isotone root
+                }
+                else
+                {
+                    isotonePath = @"C:\isotone";
+                }
+            }
             
             _configManager = new ConfigurationManager(isotonePath);
             _serviceManager = new ServiceManager(_configManager.Configuration.IsotonePath);
             _snackbarMessageQueue = new SnackbarMessageQueue();
+            _viewCache = new ViewCache();
+            
+            // Register view factories for lazy loading
+            RegisterViewFactories();
 
             // Initialize navigation items
             NavigationItems = new ObservableCollection<NavigationItemViewModel>
@@ -82,17 +106,25 @@ namespace Isotone.ViewModels
             _ = UpdateSystemResourcesAsync();
         }
 
+        private void RegisterViewFactories()
+        {
+            _viewCache.RegisterFactory("Dashboard", () => 
+                new DashboardView { DataContext = new DashboardViewModel(_serviceManager, _configManager, _snackbarMessageQueue) });
+            _viewCache.RegisterFactory("Services", () => 
+                new ServicesView { DataContext = new ServicesViewModel(_serviceManager, _configManager, _snackbarMessageQueue) });
+            _viewCache.RegisterFactory("Database", () => 
+                new DatabaseView { DataContext = new DatabaseViewModel(_configManager) });
+            _viewCache.RegisterFactory("Logs", () => 
+                new LogsView { DataContext = new LogsViewModel(_configManager) });
+            _viewCache.RegisterFactory("Settings", () => 
+                new SettingsView { DataContext = new SettingsViewModel(_configManager) });
+        }
+        
         private void NavigateTo(string viewName)
         {
-            CurrentView = viewName switch
-            {
-                "Dashboard" => new DashboardView { DataContext = new DashboardViewModel(_serviceManager, _configManager, _snackbarMessageQueue) },
-                "Services" => new ServicesView { DataContext = new ServicesViewModel(_serviceManager, _configManager, _snackbarMessageQueue) },
-                "Database" => new DatabaseView { DataContext = new DatabaseViewModel(_configManager) },
-                "Logs" => new LogsView { DataContext = new LogsViewModel(_configManager) },
-                "Settings" => new SettingsView { DataContext = new SettingsViewModel(_configManager) },
-                _ => new ComingSoonView { DataContext = new ComingSoonViewModel(viewName) }
-            };
+            // Use cached views for better performance
+            CurrentView = _viewCache.GetOrCreate(viewName) ?? 
+                         new ComingSoonView { DataContext = new ComingSoonViewModel(viewName) };
 
             // Update selection
             foreach (var item in NavigationItems)

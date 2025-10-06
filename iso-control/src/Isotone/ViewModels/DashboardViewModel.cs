@@ -97,16 +97,28 @@ namespace Isotone.ViewModels
         private bool canRestartMailpit;
 
         [ObservableProperty]
+        private bool isApacheInstalled;
+
+        [ObservableProperty]
+        private bool isMariaDBInstalled;
+
+        [ObservableProperty]
+        private bool isMailpitInstalled;
+
+        [ObservableProperty]
         private string isotonePath;
 
         [ObservableProperty]
-        private string phpVersion = "8.3.x";
+        private string phpVersion = "Checking...";
 
         [ObservableProperty]
-        private string apacheVersion = "2.4.x";
+        private string apacheVersion = "Checking...";
 
         [ObservableProperty]
-        private string mariaDBVersion = "11.x";
+        private string mariaDBVersion = "Checking...";
+
+        [ObservableProperty]
+        private string mailpitVersion = "Checking...";
 
         [ObservableProperty]
         private double cpuUsage;
@@ -130,6 +142,7 @@ namespace Isotone.ViewModels
 
             _ = UpdateServiceStatusAsync();
             _ = UpdateSystemResourcesAsync();
+            _ = GetServiceVersionsAsync();
         }
 
         private async System.Threading.Tasks.Task UpdateServiceStatusAsync()
@@ -158,6 +171,22 @@ namespace Isotone.ViewModels
         private void UpdateApacheStatus(ServiceInfo? service)
         {
             if (service == null)
+            {
+                ApacheStatus = "Not Available";
+                ApacheStatusColor = Brushes.Gray;
+                ApacheStatusBackground = new SolidColorBrush(Color.FromArgb(20, 158, 158, 158));
+                CanStartApache = false;
+                CanStopApache = false;
+                CanRestartApache = false;
+                ApacheUptime = TimeSpan.Zero;
+                IsApacheInstalled = false;
+                return;
+            }
+
+            IsApacheInstalled = service.IsInstalled;
+            System.Diagnostics.Debug.WriteLine($"Apache IsInstalled: {IsApacheInstalled}");
+
+            if (!service.IsInstalled)
             {
                 ApacheStatus = "Not Installed";
                 ApacheStatusColor = Brushes.Gray;
@@ -201,6 +230,22 @@ namespace Isotone.ViewModels
         {
             if (service == null)
             {
+                MariaDBStatus = "Not Available";
+                MariaDBStatusColor = Brushes.Gray;
+                MariaDBStatusBackground = new SolidColorBrush(Color.FromArgb(20, 158, 158, 158));
+                CanStartMariaDB = false;
+                CanStopMariaDB = false;
+                CanRestartMariaDB = false;
+                MariaDBUptime = TimeSpan.Zero;
+                IsMariaDBInstalled = false;
+                return;
+            }
+
+            IsMariaDBInstalled = service.IsInstalled;
+            System.Diagnostics.Debug.WriteLine($"MariaDB IsInstalled: {IsMariaDBInstalled}");
+
+            if (!service.IsInstalled)
+            {
                 MariaDBStatus = "Not Installed";
                 MariaDBStatusColor = Brushes.Gray;
                 MariaDBStatusBackground = new SolidColorBrush(Color.FromArgb(20, 158, 158, 158));
@@ -242,6 +287,22 @@ namespace Isotone.ViewModels
         private void UpdateMailpitStatus(ServiceInfo? service)
         {
             if (service == null)
+            {
+                MailpitStatus = "Not Available";
+                MailpitStatusColor = Brushes.Gray;
+                MailpitStatusBackground = new SolidColorBrush(Color.FromArgb(20, 158, 158, 158));
+                CanStartMailpit = false;
+                CanStopMailpit = false;
+                CanRestartMailpit = false;
+                MailpitUptime = TimeSpan.Zero;
+                IsMailpitInstalled = false;
+                return;
+            }
+
+            IsMailpitInstalled = service.IsInstalled;
+            System.Diagnostics.Debug.WriteLine($"Mailpit IsInstalled: {IsMailpitInstalled}");
+
+            if (!service.IsInstalled)
             {
                 MailpitStatus = "Not Installed";
                 MailpitStatusColor = Brushes.Gray;
@@ -585,6 +646,162 @@ namespace Isotone.ViewModels
             _snackbarMessageQueue.Enqueue("Services refreshed");
         }
 
+        [RelayCommand]
+        private async System.Threading.Tasks.Task ConfigureApache()
+        {
+            try
+            {
+                var wasInstalled = IsApacheInstalled;
+                var scriptsPath = System.IO.Path.Combine(_configManager.Configuration.IsotonePath, "scripts");
+                var scriptPath = wasInstalled 
+                    ? System.IO.Path.Combine(scriptsPath, "Unregister-Services.bat")
+                    : System.IO.Path.Combine(scriptsPath, "Register-Services.bat");
+                    
+                if (System.IO.File.Exists(scriptPath))
+                {
+                    var process = new System.Diagnostics.Process
+                    {
+                        StartInfo = new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = scriptPath,
+                            Arguments = "-Apache",
+                            UseShellExecute = true,
+                            Verb = "runas"
+                        }
+                    };
+                    process.Start();
+                    await System.Threading.Tasks.Task.Run(() => process.WaitForExit());
+                    
+                    // Wait a moment for Windows to register/unregister the service
+                    await System.Threading.Tasks.Task.Delay(2000);
+                    
+                    // Force refresh on UI thread
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        _serviceManager.RefreshServices();
+                        var apacheService = _serviceManager.GetService("IsotoneApache");
+                        UpdateApacheStatus(apacheService);
+                        // Force property change notification
+                        OnPropertyChanged(nameof(IsApacheInstalled));
+                    });
+                    
+                    _snackbarMessageQueue.Enqueue(wasInstalled ? "Apache service uninstalled" : "Apache service installed");
+                }
+                else
+                {
+                    _snackbarMessageQueue.Enqueue($"Script not found: {scriptPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _snackbarMessageQueue.Enqueue($"Failed to configure Apache: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
+        private async System.Threading.Tasks.Task ConfigureMariaDB()
+        {
+            try
+            {
+                var wasInstalled = IsMariaDBInstalled;
+                var scriptsPath = System.IO.Path.Combine(_configManager.Configuration.IsotonePath, "scripts");
+                var scriptPath = wasInstalled 
+                    ? System.IO.Path.Combine(scriptsPath, "Unregister-Services.bat")
+                    : System.IO.Path.Combine(scriptsPath, "Register-Services.bat");
+                    
+                if (System.IO.File.Exists(scriptPath))
+                {
+                    var process = new System.Diagnostics.Process
+                    {
+                        StartInfo = new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = scriptPath,
+                            Arguments = "-MariaDB",
+                            UseShellExecute = true,
+                            Verb = "runas"
+                        }
+                    };
+                    process.Start();
+                    await System.Threading.Tasks.Task.Run(() => process.WaitForExit());
+                    
+                    // Wait a moment for Windows to register/unregister the service
+                    await System.Threading.Tasks.Task.Delay(2000);
+                    
+                    // Force refresh on UI thread
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        _serviceManager.RefreshServices();
+                        var mariadbService = _serviceManager.GetService("IsotoneMariaDB");
+                        UpdateMariaDBStatus(mariadbService);
+                        // Force property change notification
+                        OnPropertyChanged(nameof(IsMariaDBInstalled));
+                    });
+                    
+                    _snackbarMessageQueue.Enqueue(wasInstalled ? "MariaDB service uninstalled" : "MariaDB service installed");
+                }
+                else
+                {
+                    _snackbarMessageQueue.Enqueue($"Script not found: {scriptPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _snackbarMessageQueue.Enqueue($"Failed to configure MariaDB: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
+        private async System.Threading.Tasks.Task ConfigureMailpit()
+        {
+            try
+            {
+                var wasInstalled = IsMailpitInstalled;
+                var scriptsPath = System.IO.Path.Combine(_configManager.Configuration.IsotonePath, "scripts");
+                var scriptPath = wasInstalled 
+                    ? System.IO.Path.Combine(scriptsPath, "Unregister-Services.bat")
+                    : System.IO.Path.Combine(scriptsPath, "Register-Services.bat");
+                    
+                if (System.IO.File.Exists(scriptPath))
+                {
+                    var process = new System.Diagnostics.Process
+                    {
+                        StartInfo = new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = scriptPath,
+                            Arguments = "-Mailpit",
+                            UseShellExecute = true,
+                            Verb = "runas"
+                        }
+                    };
+                    process.Start();
+                    await System.Threading.Tasks.Task.Run(() => process.WaitForExit());
+                    
+                    // Wait a moment for Windows to register/unregister the service
+                    await System.Threading.Tasks.Task.Delay(2000);
+                    
+                    // Force refresh on UI thread
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        _serviceManager.RefreshServices();
+                        var mailpitService = _serviceManager.GetService("IsotoneMailpit");
+                        UpdateMailpitStatus(mailpitService);
+                        // Force property change notification
+                        OnPropertyChanged(nameof(IsMailpitInstalled));
+                    });
+                    
+                    _snackbarMessageQueue.Enqueue(wasInstalled ? "Mailpit service uninstalled" : "Mailpit service installed");
+                }
+                else
+                {
+                    _snackbarMessageQueue.Enqueue($"Script not found: {scriptPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _snackbarMessageQueue.Enqueue($"Failed to configure Mailpit: {ex.Message}");
+            }
+        }
+
         private async System.Threading.Tasks.Task UpdateSystemResourcesAsync()
         {
             while (true)
@@ -659,6 +876,164 @@ namespace Isotone.ViewModels
             catch { }
             
             return 16L * 1024 * 1024 * 1024; // Default to 16GB if we can't determine
+        }
+
+        private async System.Threading.Tasks.Task GetServiceVersionsAsync()
+        {
+            await System.Threading.Tasks.Task.Run(() =>
+            {
+                // Get Apache version
+                try
+                {
+                    var apachePath = System.IO.Path.Combine(_configManager.Configuration.IsotonePath, "apache24", "bin", "httpd.exe");
+                    if (System.IO.File.Exists(apachePath))
+                    {
+                        var process = new System.Diagnostics.Process
+                        {
+                            StartInfo = new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = apachePath,
+                                Arguments = "-v",
+                                UseShellExecute = false,
+                                RedirectStandardOutput = true,
+                                CreateNoWindow = true
+                            }
+                        };
+                        process.Start();
+                        var output = process.StandardOutput.ReadToEnd();
+                        process.WaitForExit();
+                        
+                        // Parse version from output like "Server version: Apache/2.4.58 (Win64)"
+                        var match = System.Text.RegularExpressions.Regex.Match(output, @"Apache/([\d\.]+)");
+                        if (match.Success)
+                        {
+                            ApacheVersion = match.Groups[1].Value;
+                        }
+                        else
+                        {
+                            ApacheVersion = "2.4.x";
+                        }
+                    }
+                }
+                catch
+                {
+                    ApacheVersion = "2.4.x";
+                }
+
+                // Get MariaDB version
+                try
+                {
+                    var mariadbPath = System.IO.Path.Combine(_configManager.Configuration.IsotonePath, "mariadb", "bin", "mysqld.exe");
+                    if (System.IO.File.Exists(mariadbPath))
+                    {
+                        var process = new System.Diagnostics.Process
+                        {
+                            StartInfo = new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = mariadbPath,
+                                Arguments = "--version",
+                                UseShellExecute = false,
+                                RedirectStandardOutput = true,
+                                CreateNoWindow = true
+                            }
+                        };
+                        process.Start();
+                        var output = process.StandardOutput.ReadToEnd();
+                        process.WaitForExit();
+                        
+                        // Parse version from output like "mysqld  Ver 11.5.2-MariaDB for Win64"
+                        var match = System.Text.RegularExpressions.Regex.Match(output, @"Ver\s+([\d\.]+)");
+                        if (match.Success)
+                        {
+                            MariaDBVersion = match.Groups[1].Value;
+                        }
+                        else
+                        {
+                            MariaDBVersion = "11.x";
+                        }
+                    }
+                }
+                catch
+                {
+                    MariaDBVersion = "11.x";
+                }
+
+                // Get Mailpit version
+                try
+                {
+                    var mailpitPath = System.IO.Path.Combine(_configManager.Configuration.IsotonePath, "mailpit", "mailpit.exe");
+                    if (System.IO.File.Exists(mailpitPath))
+                    {
+                        var process = new System.Diagnostics.Process
+                        {
+                            StartInfo = new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = mailpitPath,
+                                Arguments = "version",
+                                UseShellExecute = false,
+                                RedirectStandardOutput = true,
+                                CreateNoWindow = true
+                            }
+                        };
+                        process.Start();
+                        var output = process.StandardOutput.ReadToEnd();
+                        process.WaitForExit();
+                        
+                        // Parse version from output like "Mailpit v1.21.5"
+                        var match = System.Text.RegularExpressions.Regex.Match(output, @"v([\d\.]+)");
+                        if (match.Success)
+                        {
+                            MailpitVersion = match.Groups[1].Value;
+                        }
+                        else
+                        {
+                            MailpitVersion = "1.x";
+                        }
+                    }
+                }
+                catch
+                {
+                    MailpitVersion = "1.x";
+                }
+
+                // Get PHP version
+                try
+                {
+                    var phpPath = System.IO.Path.Combine(_configManager.Configuration.IsotonePath, "php", "php.exe");
+                    if (System.IO.File.Exists(phpPath))
+                    {
+                        var process = new System.Diagnostics.Process
+                        {
+                            StartInfo = new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = phpPath,
+                                Arguments = "-v",
+                                UseShellExecute = false,
+                                RedirectStandardOutput = true,
+                                CreateNoWindow = true
+                            }
+                        };
+                        process.Start();
+                        var output = process.StandardOutput.ReadToEnd();
+                        process.WaitForExit();
+                        
+                        // Parse version from output like "PHP 8.3.14 (cli)"
+                        var match = System.Text.RegularExpressions.Regex.Match(output, @"PHP\s+([\d\.]+)");
+                        if (match.Success)
+                        {
+                            PhpVersion = match.Groups[1].Value;
+                        }
+                        else
+                        {
+                            PhpVersion = "8.3.x";
+                        }
+                    }
+                }
+                catch
+                {
+                    PhpVersion = "8.3.x";
+                }
+            });
         }
     }
 }

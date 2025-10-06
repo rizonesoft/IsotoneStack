@@ -36,7 +36,8 @@ namespace Isotone.Services
                 }
             };
 
-            RefreshServices();
+            // Don't refresh services on initialization - let views request when needed
+            // RefreshServices();
         }
 
         public void RefreshServices()
