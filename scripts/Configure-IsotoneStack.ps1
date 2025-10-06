@@ -196,7 +196,14 @@ phpinfo();
     # Step 2: Configure Apache
     Write-Log "[2/7] Configuring Apache..." "YELLOW"
 
-    $apacheTemplate = Join-Path $configPath "apache24\httpd.conf"
+    # Create Apache log directory
+    $apacheLogDir = Join-Path $isotonePath "logs\apache"
+    if (!(Test-Path $apacheLogDir)) {
+        New-Item -Path $apacheLogDir -ItemType Directory -Force | Out-Null
+        Write-Log "  Created Apache log directory" "DEBUG"
+    }
+
+    $apacheTemplate = Join-Path $configPath "apache\httpd.conf"
     $apacheConfig = Join-Path $isotonePath "apache24\conf\httpd.conf"
 
     if (Test-Path $apacheTemplate) {
@@ -217,7 +224,7 @@ phpinfo();
         Set-Content -Path $apacheConfig -Value $content -Encoding UTF8
         Write-Log "  [OK] Apache configuration applied from template" "SUCCESS"
     } else {
-        Write-Log "  [WARNING] httpd.conf not found in config\apache24\" "WARNING"
+        Write-Log "  [WARNING] httpd.conf not found in config\apache\" "WARNING"
         Write-Log "  Attempting basic configuration..." "DEBUG"
         
         if (Test-Path $apacheConfig) {
@@ -472,10 +479,26 @@ default-character-set=utf8mb4
     Write-Host ""
     Write-Log "Creating phpMyAdmin alias in Apache..." "CYAN"
 
+    $phpmyadminAliasTemplate = Join-Path $configPath "apache\extra\httpd-phpmyadmin.conf"
     $phpmyadminAlias = Join-Path $isotonePath "apache24\conf\extra\httpd-phpmyadmin.conf"
-    if (!(Test-Path $phpmyadminAlias) -or $Force) {
-        $installPathFS = $isotonePath.Replace('\', '/')
-        $aliasContent = @"
+    
+    if (Test-Path $phpmyadminAliasTemplate) {
+        Write-Log "  Using httpd-phpmyadmin.conf from config folder..." "DEBUG"
+        
+        # Read template and replace variables
+        $content = Get-Content -Path $phpmyadminAliasTemplate -Raw
+        $content = Replace-TemplateVariables -Content $content -InstallPath $isotonePath
+        
+        # Write configuration
+        Set-Content -Path $phpmyadminAlias -Value $content -Encoding ASCII
+        Write-Log "  [OK] phpMyAdmin alias configuration applied from template" "SUCCESS"
+    } else {
+        Write-Log "  [WARNING] httpd-phpmyadmin.conf not found in config\apache\extra\" "WARNING"
+        
+        # Fallback: create basic configuration
+        if (!(Test-Path $phpmyadminAlias) -or $Force) {
+            $installPathFS = $isotonePath.Replace('\', '/')
+            $aliasContent = @"
 Alias /phpmyadmin "$installPathFS/phpmyadmin"
 
 <Directory "$installPathFS/phpmyadmin">
@@ -484,21 +507,22 @@ Alias /phpmyadmin "$installPathFS/phpmyadmin"
     Require all granted
 </Directory>
 "@
-        Set-Content -Path $phpmyadminAlias -Value $aliasContent -Encoding ASCII
-        Write-Log "  Created phpMyAdmin alias configuration" "DEBUG"
-        
-        # Add include to httpd.conf if not already there
-        $apacheConfig = Join-Path $isotonePath "apache24\conf\httpd.conf"
-        $configContent = Get-Content -Path $apacheConfig -Raw
-        
-        if ($configContent -notmatch "httpd-phpmyadmin\.conf") {
-            Add-Content -Path $apacheConfig -Value "`nInclude conf/extra/httpd-phpmyadmin.conf"
-            Write-Log "  Added phpMyAdmin include to httpd.conf" "DEBUG"
+            Set-Content -Path $phpmyadminAlias -Value $aliasContent -Encoding ASCII
+            Write-Log "  Created basic phpMyAdmin alias configuration" "DEBUG"
         }
-        
-        Write-Log "  [OK] phpMyAdmin alias created" "SUCCESS"
+        Write-Log "  [OK] phpMyAdmin alias configuration created" "SUCCESS"
+    }
+    
+    # Add include to httpd.conf if not already there
+    $apacheConfig = Join-Path $isotonePath "apache24\conf\httpd.conf"
+    $configContent = Get-Content -Path $apacheConfig -Raw
+    
+    if ($configContent -notmatch "httpd-phpmyadmin\.conf") {
+        Add-Content -Path $apacheConfig -Value "`nInclude conf/extra/httpd-phpmyadmin.conf"
+        Write-Log "  Added phpMyAdmin include to httpd.conf" "DEBUG"
+        Write-Log "  [OK] phpMyAdmin include added" "SUCCESS"
     } else {
-        Write-Log "  [OK] phpMyAdmin alias already exists" "SUCCESS"
+        Write-Log "  [OK] phpMyAdmin include already exists in httpd.conf" "SUCCESS"
     }
 
     # Check if phpMyAdmin storage setup might be needed
