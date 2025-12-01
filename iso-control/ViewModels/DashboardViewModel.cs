@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows.Input;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -999,39 +1000,35 @@ namespace Isotone.ViewModels
                 // Get PHP version
                 try
                 {
-                    var phpPath = System.IO.Path.Combine(_configManager.Configuration.IsotonePath, "php", "php.exe");
-                    if (System.IO.File.Exists(phpPath))
+                    // Get selected PHP version from config
+                    var selectedVersion = _configManager.Configuration.SelectedPhpVersion;
+                    if (!string.IsNullOrEmpty(selectedVersion))
                     {
-                        var process = new System.Diagnostics.Process
+                        PhpVersion = selectedVersion;
+                    }
+                    else
+                    {
+                        // Fallback: detect first available PHP version
+                        var phpBasePath = System.IO.Path.Combine(_configManager.Configuration.IsotonePath, "php");
+                        if (System.IO.Directory.Exists(phpBasePath))
                         {
-                            StartInfo = new System.Diagnostics.ProcessStartInfo
-                            {
-                                FileName = phpPath,
-                                Arguments = "-v",
-                                UseShellExecute = false,
-                                RedirectStandardOutput = true,
-                                CreateNoWindow = true
-                            }
-                        };
-                        process.Start();
-                        var output = process.StandardOutput.ReadToEnd();
-                        process.WaitForExit();
-                        
-                        // Parse version from output like "PHP 8.3.14 (cli)"
-                        var match = System.Text.RegularExpressions.Regex.Match(output, @"PHP\s+([\d\.]+)");
-                        if (match.Success)
-                        {
-                            PhpVersion = match.Groups[1].Value;
+                            var phpDirs = System.IO.Directory.GetDirectories(phpBasePath)
+                                .Where(d => System.IO.File.Exists(System.IO.Path.Combine(d, "php.exe")))
+                                .Select(d => System.IO.Path.GetFileName(d))
+                                .OrderByDescending(v => v)
+                                .FirstOrDefault();
+                            
+                            PhpVersion = phpDirs ?? "Not configured";
                         }
                         else
                         {
-                            PhpVersion = "8.3.x";
+                            PhpVersion = "Not found";
                         }
                     }
                 }
                 catch
                 {
-                    PhpVersion = "8.3.x";
+                    PhpVersion = "Unknown";
                 }
             });
         }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 
@@ -89,5 +90,7 @@ namespace Isotone.Utilities
         public int ApacheSSLPort { get; set; }
         public int MariaDBPort { get; set; }
         public int MailpitPort { get; set; }
+        public string SelectedPhpVersion { get; set; } = "8.4.15";
+        public List<string> EnabledPhpExtensions { get; set; } = new List<string>();
     }
 }

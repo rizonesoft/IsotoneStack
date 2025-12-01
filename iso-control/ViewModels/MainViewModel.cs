@@ -89,6 +89,7 @@ namespace Isotone.ViewModels
                 new NavigationItemViewModel("Dashboard", "ViewDashboard", () => NavigateTo("Dashboard")),
                 new NavigationItemViewModel("Services", "ServerNetwork", () => NavigateTo("Services")),
                 new NavigationItemViewModel("Database", "Database", () => NavigateTo("Database")),
+                new NavigationItemViewModel("PHP", "LanguagePhp", () => NavigateTo("PHP")),
                 new NavigationItemViewModel("Virtual Hosts", "Web", () => NavigateTo("VirtualHosts")),
                 new NavigationItemViewModel("Ports", "LanConnect", () => NavigateTo("Ports")),
                 new NavigationItemViewModel("Logs", "FileDocument", () => NavigateTo("Logs")),
@@ -97,13 +98,16 @@ namespace Isotone.ViewModels
                 new NavigationItemViewModel("Settings", "Settings", () => NavigateTo("Settings"))
             };
 
-            // Select Dashboard by default
-            NavigationItems[0].IsSelected = true;
-            NavigateTo("Dashboard");
-
-            // Start monitoring services and system resources
-            _ = UpdateServiceStatusAsync();
-            _ = UpdateSystemResourcesAsync();
+            // Select Dashboard by default - defer to avoid blocking startup
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                NavigationItems[0].IsSelected = true;
+                NavigateTo("Dashboard");
+                
+                // Start monitoring services and system resources
+                _ = UpdateServiceStatusAsync();
+                _ = UpdateSystemResourcesAsync();
+            }), System.Windows.Threading.DispatcherPriority.Background);
         }
 
         private void RegisterViewFactories()
@@ -114,17 +118,28 @@ namespace Isotone.ViewModels
                 new ServicesView { DataContext = new ServicesViewModel(_serviceManager, _configManager, _snackbarMessageQueue) });
             _viewCache.RegisterFactory("Database", () => 
                 new DatabaseView { DataContext = new DatabaseViewModel(_configManager) });
+            _viewCache.RegisterFactory("PHP", () => 
+                new PhpView { DataContext = new PhpViewModel(_configManager, _serviceManager, _snackbarMessageQueue) });
             _viewCache.RegisterFactory("Logs", () => 
                 new LogsView { DataContext = new LogsViewModel(_configManager) });
             _viewCache.RegisterFactory("Settings", () => 
                 new SettingsView { DataContext = new SettingsViewModel(_configManager) });
+            
+            // Placeholder factories for upcoming features (return Dashboard temporarily)
+            _viewCache.RegisterFactory("VirtualHosts", () => 
+                new DashboardView { DataContext = new DashboardViewModel(_serviceManager, _configManager, _snackbarMessageQueue) });
+            _viewCache.RegisterFactory("Ports", () => 
+                new DashboardView { DataContext = new DashboardViewModel(_serviceManager, _configManager, _snackbarMessageQueue) });
+            _viewCache.RegisterFactory("Scripts", () => 
+                new DashboardView { DataContext = new DashboardViewModel(_serviceManager, _configManager, _snackbarMessageQueue) });
+            _viewCache.RegisterFactory("Security", () => 
+                new DashboardView { DataContext = new DashboardViewModel(_serviceManager, _configManager, _snackbarMessageQueue) });
         }
         
         private void NavigateTo(string viewName)
         {
             // Use cached views for better performance
-            CurrentView = _viewCache.GetOrCreate(viewName) ?? 
-                         new ComingSoonView { DataContext = new ComingSoonViewModel(viewName) };
+            CurrentView = _viewCache.GetOrCreate(viewName);
 
             // Update selection
             foreach (var item in NavigationItems)

@@ -96,6 +96,49 @@
                     </StackPanel>
                 </materialDesign:Card>
 
+                <!-- Error Log Management -->
+                <materialDesign:Card Padding="16" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="Error Log Management" 
+                                 FontSize="20" FontWeight="Medium"
+                                 Margin="0,0,0,16"/>
+                        
+                        <TextBlock Text="View and manage application error logs for troubleshooting."
+                                 TextWrapping="Wrap"
+                                 Foreground="{DynamicResource SecondaryTextBrush}"
+                                 Margin="0,0,0,16"/>
+                        
+                        <StackPanel Orientation="Horizontal">
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                  Command="{Binding OpenErrorLogCommand}"
+                                  Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FileDocument" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Open Error Log"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                  Command="{Binding ShowErrorLogPathCommand}"
+                                  Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FolderOpen" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Show Log Path"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                  Command="{Binding ClearErrorLogCommand}"
+                                  Foreground="#FF5252">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Delete" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Clear Log"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </materialDesign:Card>
+
                 <!-- Action Buttons -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
                     <Button Style="{StaticResource MaterialDesignRaisedButton}"

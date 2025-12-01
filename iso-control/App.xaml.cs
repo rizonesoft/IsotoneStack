@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Isotone.Utilities;
 
 namespace Isotone
 {
@@ -42,8 +43,8 @@ namespace Isotone
             // Create main window after splash is showing
             Task.Run(async () =>
             {
-                // Let splash animate for a bit
-                await Task.Delay(1500);
+                // Brief delay to ensure smooth splash display
+                await Task.Delay(300);
                 
                 // Create main window on main UI thread
                 await Dispatcher.InvokeAsync(() =>
@@ -85,12 +86,22 @@ namespace Isotone
 
         private void ShowErrorDialog(Exception? exception)
         {
-            var message = exception?.Message ?? "An unknown error occurred.";
-            MessageBox.Show(
-                $"An error occurred:\n\n{message}\n\nThe application will continue running.", 
-                "IsotoneStack Error", 
-                MessageBoxButton.OK, 
-                MessageBoxImage.Error);
+            if (exception != null)
+            {
+                ErrorHandler.HandleException(
+                    exception,
+                    "Application",
+                    "An unhandled error occurred in the application. The application will continue running."
+                );
+            }
+            else
+            {
+                ErrorHandler.ShowError(
+                    "Unknown Error",
+                    "An unknown error occurred.",
+                    "No exception information is available. The application will continue running."
+                );
+            }
         }
     }
 }

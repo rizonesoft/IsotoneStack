@@ -1,156 +1,35 @@
 <?php
-/**
- * IsotoneStack - Dashboard
- * Dynamic component information and control panel
- */
-
-// Component version detection functions
-function getApacheVersion() {
-    if (function_exists('apache_get_version')) {
-        $version = apache_get_version();
-        if (preg_match('/Apache\/(\d+\.\d+\.\d+)/', $version, $matches)) {
-            return $matches[1];
-        }
-    }
-    return 'Unknown';
-}
-
-function getPHPVersion() {
-    return PHP_VERSION;
-}
-
-function getMariaDBVersion() {
-    $mysqli = @new mysqli('localhost', 'root', '');
-    if (!$mysqli->connect_error) {
-        $result = $mysqli->query("SELECT VERSION()");
-        if ($result) {
-            $row = $result->fetch_row();
-            $mysqli->close();
-            return $row[0];
-        }
-        $mysqli->close();
-    }
-    return 'Not Connected';
-}
-
-function getPhpMyAdminVersion() {
-    $configFile = 'C:/isotone/phpmyadmin/RELEASE-DATE-5.2.2';
-    if (file_exists($configFile)) {
-        return '5.2.2';
-    }
-    return 'Unknown';
-}
-
-function getMailpitStatus() {
-    $socket = @fsockopen('localhost', 1025, $errno, $errstr, 1);
-    if ($socket) {
-        fclose($socket);
-        return 'Running';
-    }
-    return 'Stopped';
-}
-
-// Component definitions
-$components = [
-    [
-        'name' => 'Apache',
-        'description' => 'High-performance HTTP Server',
-        'version' => getApacheVersion(),
-        'status' => 'Running',
-        'icon' => 'server',
-        'color' => 'red',
-        'url' => null,
-        'port' => '80, 443'
-    ],
-    [
-        'name' => 'PHP',
-        'description' => 'Server-side scripting language',
-        'version' => getPHPVersion(),
-        'status' => 'Active',
-        'icon' => 'code',
-        'color' => 'purple',
-        'url' => '/default/phpinfo.php',
-        'port' => null
-    ],
-    [
-        'name' => 'MariaDB',
-        'description' => 'MySQL-compatible database server',
-        'version' => getMariaDBVersion(),
-        'status' => strpos(getMariaDBVersion(), 'Not Connected') === false ? 'Running' : 'Stopped',
-        'icon' => 'database',
-        'color' => 'blue',
-        'url' => null,
-        'port' => '3306'
-    ],
-    [
-        'name' => 'phpMyAdmin',
-        'description' => 'Web-based MySQL administration',
-        'version' => getPhpMyAdminVersion(),
-        'status' => 'Available',
-        'icon' => 'table',
-        'color' => 'orange',
-        'url' => '/phpmyadmin/',
-        'port' => null
-    ],
-    [
-        'name' => 'phpLiteAdmin',
-        'description' => 'SQLite database management',
-        'version' => '1.9.8.2',
-        'status' => 'Available',
-        'icon' => 'collection',
-        'color' => 'green',
-        'url' => '/phpliteadmin/',
-        'port' => null
-    ],
-    [
-        'name' => 'Adminer',
-        'description' => 'Universal database management',
-        'version' => '5.3.0',
-        'status' => 'Available',
-        'icon' => 'view-grid',
-        'color' => 'indigo',
-        'url' => '/adminer/',
-        'port' => null
-    ],
-    [
-        'name' => 'Mailpit',
-        'description' => 'Email testing and capture tool',
-        'version' => '1.27.7',
-        'status' => getMailpitStatus(),
-        'icon' => 'mail',
-        'color' => 'teal',
-        'url' => 'http://localhost:8025',
-        'port' => '1025, 8025'
-    ],
-    [
-        'name' => 'Control Panel',
-        'description' => 'IsotoneStack Management Interface',
-        'version' => '1.0',
-        'status' => 'Available',
-        'icon' => 'cog',
-        'color' => 'gray',
-        'url' => '/default/control/',
-        'port' => null
-    ],
-    [
-        'name' => 'Chromium',
-        'description' => 'Portable development browser',
-        'version' => file_exists('C:/isotone/browser/chromium/chrome.exe') ? 'Installed' : 'Not Installed',
-        'status' => file_exists('C:/isotone/browser/chromium/chrome.exe') ? 'Available' : 'Download Required',
-        'icon' => 'globe',
-        'color' => 'blue',
-        'url' => file_exists('C:/isotone/browser/chromium/chrome.exe') ? '#' : 'https://github.com/portapps/ungoogled-chromium-portable',
-        'port' => null
-    ]
+$isotoneRoot = realpath(__DIR__ . '/..');
+$isoControlDir = $isotoneRoot . DIRECTORY_SEPARATOR . 'iso-control';
+$executableCandidates = [
+    $isoControlDir . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'Release' . DIRECTORY_SEPARATOR . 'net10.0-windows' . DIRECTORY_SEPARATOR . 'win-x64' . DIRECTORY_SEPARATOR . 'Isotone.exe',
+    $isoControlDir . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'Debug' . DIRECTORY_SEPARATOR . 'net10.0-windows' . DIRECTORY_SEPARATOR . 'win-x64' . DIRECTORY_SEPARATOR . 'Isotone.exe',
+    $isoControlDir . DIRECTORY_SEPARATOR . 'Isotone.exe'
 ];
 
-// Get system information
+$isoControlExecutable = null;
+foreach ($executableCandidates as $candidate) {
+    if (file_exists($candidate)) {
+        $isoControlExecutable = realpath($candidate);
+        break;
+    }
+}
+
+if (!$isoControlExecutable) {
+    $globPattern = $isoControlDir . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . '*' . DIRECTORY_SEPARATOR . 'win-x64' . DIRECTORY_SEPARATOR . 'Isotone.exe';
+    $matches = glob($globPattern, GLOB_NOSORT);
+    if (!empty($matches)) {
+        $isoControlExecutable = realpath($matches[0]);
+    }
+}
+
+$displayPath = $isoControlExecutable ?: $isoControlDir;
+$relativePath = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $displayPath);
+
 $systemInfo = [
     'os' => php_uname('s') . ' ' . php_uname('r'),
     'hostname' => gethostname(),
-    'ip' => $_SERVER['SERVER_ADDR'] ?? 'localhost',
-    'php_sapi' => php_sapi_name(),
-    'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'
+    'ip' => $_SERVER['SERVER_ADDR'] ?? 'localhost'
 ];
 ?>
 <!DOCTYPE html>
@@ -158,199 +37,193 @@ $systemInfo = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IsotoneStack - Professional Development Environment</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://unpkg.com/heroicons@2.0.18/24/outline/style.css">
+    <title>IsotoneStack · Welcome</title>
     <style>
-        .hero-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        :root {
+            color-scheme: dark;
         }
-        .card-hover {
-            transition: all 0.3s ease;
+        * {
+            box-sizing: border-box;
         }
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: radial-gradient(circle at 10% -10%, rgba(50, 150, 255, 0.25), rgba(9, 17, 31, 1)), #050910;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 16px;
         }
-        .status-indicator {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        .shell {
+            width: min(960px, 100%);
+            background: rgba(8, 14, 24, 0.8);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 80px rgba(3, 7, 18, 0.65);
+            padding: clamp(32px, 6vw, 56px);
+            backdrop-filter: blur(40px);
         }
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 18px;
+            border-radius: 999px;
+            background: rgba(79, 209, 197, 0.12);
+            color: #7af1df;
+            font-size: 13px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+        h1 {
+            font-size: clamp(32px, 6vw, 54px);
+            margin: 0 0 12px 0;
+            line-height: 1.1;
+        }
+        p.lead {
+            font-size: clamp(16px, 2vw, 20px);
+            color: #cbd5e1;
+            margin: 0;
+            line-height: 1.6;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+            margin: 32px 0;
+        }
+        .card {
+            padding: 20px;
+            border-radius: 16px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .card h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #f8fafc;
+            letter-spacing: 0.02em;
+        }
+        .card p {
+            margin: 0;
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .card a {
+            margin-top: auto;
+            color: #38e2b8;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .path-box {
+            margin-top: 32px;
+            padding: 18px;
+            border-radius: 12px;
+            font-family: "Consolas", "JetBrains Mono", monospace;
+            font-size: 14px;
+            color: #8df5ff;
+            background: rgba(2, 6, 23, 0.85);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            overflow-wrap: anywhere;
+        }
+        .actions {
+            margin-top: 36px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .button {
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: filter 0.2s ease;
+        }
+        .button.primary {
+            background: linear-gradient(120deg, #0ea5e9, #1dd1a1);
+            color: #04121d;
+        }
+        .button.secondary {
+            background: rgba(148, 163, 184, 0.15);
+            color: #e2e8f0;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+        }
+        .button:hover {
+            filter: brightness(1.05);
+        }
+        .system-info {
+            margin-top: 24px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        @media (max-width: 640px) {
+            body {
+                padding: 24px 12px;
             }
-            50% {
-                opacity: .5;
+            .shell {
+                padding: 28px;
+            }
+            .actions {
+                flex-direction: column;
             }
         }
     </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Header -->
-    <div class="hero-gradient text-white">
-        <div class="container mx-auto px-6 py-16">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-4xl font-bold mb-2">IsotoneStack</h1>
-                    <p class="text-xl opacity-90">Professional Windows Development Environment</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-sm opacity-75">System: <?php echo $systemInfo['os']; ?></p>
-                    <p class="text-sm opacity-75">Host: <?php echo $systemInfo['hostname']; ?></p>
-                    <p class="text-sm opacity-75">IP: <?php echo $systemInfo['ip']; ?></p>
-                </div>
-            </div>
+<body>
+    <main class="shell" role="main">
+        <div class="badge">Localhost</div>
+        <h1>Welcome to IsotoneStack</h1>
+        <p class="lead">
+            Iso-control is the single source of truth for managing your services. Launch the desktop app to start and stop
+            Apache, MariaDB, Mailpit, and to reach every bundled developer tool.
+        </p>
+
+        <section class="grid" aria-label="Quick actions">
+            <article class="card">
+                <h3>Iso-control Desktop</h3>
+                <p>Use the desktop dashboard to control all services, view logs, and open bundled tooling from one place.</p>
+                <span>Launch locally from the path below.</span>
+            </article>
+            <article class="card">
+                <h3>Databases</h3>
+                <p>phpMyAdmin is still available for direct database access.</p>
+                <a href="/phpmyadmin/">Open phpMyAdmin →</a>
+            </article>
+            <article class="card">
+                <h3>Diagnostics</h3>
+                <p>Need PHP runtime details?</p>
+                <a href="/default/phpinfo.php">View phpinfo()</a>
+            </article>
+            <article class="card">
+                <h3>Mailpit</h3>
+                <p>Inspect captured emails in the bundled Mailpit instance.</p>
+                <a href="http://localhost:8025" rel="noopener">Go to Mailpit</a>
+            </article>
+        </section>
+
+        <div class="path-box" aria-label="Iso-control executable path">
+            <?php echo htmlspecialchars($relativePath, ENT_QUOTES, 'UTF-8'); ?>
         </div>
-    </div>
 
-    <!-- Quick Stats -->
-    <div class="container mx-auto px-6 -mt-8">
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900"><?php echo count(array_filter($components, fn($c) => in_array($c['status'], ['Running', 'Active']))); ?></div>
-                    <div class="text-sm text-gray-600">Active Services</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900"><?php echo count($components); ?></div>
-                    <div class="text-sm text-gray-600">Total Components</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">PHP <?php echo PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION; ?></div>
-                    <div class="text-sm text-gray-600">Runtime Version</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900"><?php echo round(memory_get_usage() / 1024 / 1024, 1); ?> MB</div>
-                    <div class="text-sm text-gray-600">Memory Usage</div>
-                </div>
-            </div>
+        <div class="actions">
+            <a class="button primary" href="/default/control/">Learn about Iso-control</a>
+            <a class="button secondary" href="https://github.com/rizonesoft/IsotoneStack" target="_blank" rel="noopener">Project on GitHub</a>
         </div>
-    </div>
 
-    <!-- Component Cards -->
-    <div class="container mx-auto px-6 py-12">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Components & Services</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <?php foreach ($components as $component): ?>
-            <div class="bg-white rounded-lg shadow-md card-hover">
-                <div class="p-6">
-                    <!-- Icon and Status -->
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 bg-<?php echo $component['color']; ?>-100 rounded-lg">
-                            <?php 
-                            // SVG icons for each component
-                            $icons = [
-                                'server' => '<svg class="w-6 h-6 text-' . $component['color'] . '-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>',
-                                'code' => '<svg class="w-6 h-6 text-' . $component['color'] . '-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>',
-                                'database' => '<svg class="w-6 h-6 text-' . $component['color'] . '-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>',
-                                'table' => '<svg class="w-6 h-6 text-' . $component['color'] . '-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>',
-                                'collection' => '<svg class="w-6 h-6 text-' . $component['color'] . '-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>',
-                                'view-grid' => '<svg class="w-6 h-6 text-' . $component['color'] . '-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>',
-                                'mail' => '<svg class="w-6 h-6 text-' . $component['color'] . '-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>',
-                                'cog' => '<svg class="w-6 h-6 text-' . $component['color'] . '-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>',
-                                'globe' => '<svg class="w-6 h-6 text-' . $component['color'] . '-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>'
-                            ];
-                            echo $icons[$component['icon']] ?? $icons['cog'];
-                            ?>
-                        </div>
-                        <div class="flex items-center">
-                            <?php if ($component['status'] === 'Running' || $component['status'] === 'Active'): ?>
-                                <span class="status-indicator w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                                <span class="text-xs text-green-600 font-semibold"><?php echo $component['status']; ?></span>
-                            <?php elseif ($component['status'] === 'Stopped'): ?>
-                                <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                                <span class="text-xs text-red-600 font-semibold"><?php echo $component['status']; ?></span>
-                            <?php else: ?>
-                                <span class="w-2 h-2 bg-gray-400 rounded-full mr-2"></span>
-                                <span class="text-xs text-gray-600 font-semibold"><?php echo $component['status']; ?></span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
-                    <!-- Component Info -->
-                    <h3 class="text-lg font-semibold text-gray-900 mb-1"><?php echo $component['name']; ?></h3>
-                    <p class="text-sm text-gray-600 mb-3"><?php echo $component['description']; ?></p>
-                    
-                    <!-- Version and Port -->
-                    <div class="space-y-1 mb-4">
-                        <div class="flex justify-between text-xs">
-                            <span class="text-gray-500">Version:</span>
-                            <span class="text-gray-900 font-medium"><?php echo $component['version']; ?></span>
-                        </div>
-                        <?php if ($component['port']): ?>
-                        <div class="flex justify-between text-xs">
-                            <span class="text-gray-500">Port:</span>
-                            <span class="text-gray-900 font-medium"><?php echo $component['port']; ?></span>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Action Button -->
-                    <?php if ($component['url']): ?>
-                    <a href="<?php echo $component['url']; ?>" 
-                       class="block w-full text-center bg-<?php echo $component['color']; ?>-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-<?php echo $component['color']; ?>-700 transition-colors">
-                        Open Interface
-                    </a>
-                    <?php else: ?>
-                    <div class="block w-full text-center bg-gray-200 text-gray-500 rounded-lg px-4 py-2 text-sm font-medium cursor-not-allowed">
-                        Service Only
-                    </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-
-    <!-- Quick Links -->
-    <div class="container mx-auto px-6 py-12">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <a href="/default/control/" class="flex items-center justify-center p-4 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                    <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                    </svg>
-                    <span class="text-sm font-medium">Control Panel</span>
-                </a>
-                <a href="/phpmyadmin/" class="flex items-center justify-center p-4 bg-orange-100 rounded-lg hover:bg-orange-200 transition-colors">
-                    <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
-                    </svg>
-                    <span class="text-sm font-medium">Databases</span>
-                </a>
-                <a href="http://localhost:8025" class="flex items-center justify-center p-4 bg-teal-100 rounded-lg hover:bg-teal-200 transition-colors">
-                    <svg class="w-5 h-5 mr-2 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                    </svg>
-                    <span class="text-sm font-medium">Email Testing</span>
-                </a>
-                <a href="/default/phpinfo.php" class="flex items-center justify-center p-4 bg-purple-100 rounded-lg hover:bg-purple-200 transition-colors">
-                    <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <span class="text-sm font-medium">PHP Info</span>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white mt-12">
-        <div class="container mx-auto px-6 py-8">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-4 md:mb-0">
-                    <p class="text-sm">IsotoneStack v1.0 - Professional Development Environment</p>
-                    <p class="text-xs text-gray-400 mt-1">All components are open source and free for commercial use</p>
-                </div>
-                <div class="flex space-x-6">
-                    <a href="/default/control/" class="text-sm hover:text-gray-300">Control Panel</a>
-                    <a href="/default/docs/" class="text-sm hover:text-gray-300">Documentation</a>
-                    <a href="https://github.com/isotonestack" class="text-sm hover:text-gray-300">GitHub</a>
-                </div>
-            </div>
-        </div>
-    </footer>
+        <p class="system-info">
+            <?php echo htmlspecialchars($systemInfo['hostname']); ?> · <?php echo htmlspecialchars($systemInfo['os']); ?> · <?php echo htmlspecialchars($systemInfo['ip']); ?>
+        </p>
+    </main>
 </body>
 </html>

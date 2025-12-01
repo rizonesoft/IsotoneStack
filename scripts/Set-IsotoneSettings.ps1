@@ -10,6 +10,8 @@ param(
     
     [switch]$List,
     [switch]$Reset,
+    [switch]$AutoStart,           # Enable auto-start services with Windows
+    [switch]$NoAutoStart,         # Disable auto-start services with Windows
     [switch]$EnableVerbose,
     [switch]$DisableVerbose,
     [int]$MaxLogSizeMB,
@@ -230,6 +232,18 @@ try {
     if ($DisableFileLogging) {
         $settings.logging.logToFile = $false
         Write-Output-Color "File logging disabled" "Green"
+        $modified = $true
+    }
+    
+    if ($AutoStart) {
+        $settings.services.autoStart = $true
+        Write-Output-Color "Service auto-start enabled" "Green"
+        $modified = $true
+    }
+    
+    if ($NoAutoStart) {
+        $settings.services.autoStart = $false
+        Write-Output-Color "Service auto-start disabled" "Green"
         $modified = $true
     }
     

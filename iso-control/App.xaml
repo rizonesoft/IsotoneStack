@@ -169,6 +169,9 @@
                             </Setter.Value>
                         </Setter>
                     </Style>
+                    
+                    <!-- Converters -->
+                    <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

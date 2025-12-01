@@ -3,6 +3,7 @@
 # Uses template files from the config folder with variable replacement
 
 param(
+    [string]$PhpVersion = "",   # Specific PHP version to use (e.g., "8.4.11")
     [switch]$Force,
     [switch]$SkipMariaDBInit,
     [switch]$Verbose,    # Enable verbose output
@@ -81,14 +82,32 @@ try {
         Write-Log "  [OK] Apache found" "SUCCESS"
     }
 
-    # Check PHP
-    if (!(Test-Path "$isotonePath\php\php.exe")) {
-        Write-Log "  [MISSING] PHP - Component not found in php folder" "ERROR"
+    # Check PHP (detect all versions)
+    $phpVersions = Get-ChildItem -Path "$isotonePath\php" -Directory -ErrorAction SilentlyContinue | 
+                   Where-Object { Test-Path (Join-Path $_.FullName "php.exe") }
+    
+    if ($phpVersions.Count -eq 0) {
+        Write-Log "  [MISSING] PHP - No PHP versions found in php folder" "ERROR"
         $missingComponents = $true
     } else {
-        Write-Log "  [OK] PHP found" "SUCCESS"
+        Write-Log "  [OK] Found $($phpVersions.Count) PHP version(s):" "SUCCESS"
+        foreach ($ver in $phpVersions) {
+            Write-Log "      - PHP $($ver.Name)" "DEBUG"
+        }
+        # Set default version: use parameter if provided, otherwise use latest
+        if ($PhpVersion -and ($phpVersions.Name -contains $PhpVersion)) {
+            $defaultPhpVersion = $PhpVersion
+            Write-Log "  [INFO] Using specified PHP version: $defaultPhpVersion" "INFO"
+        } else {
+            $defaultPhpVersion = ($phpVersions | Sort-Object Name -Descending | Select-Object -First 1).Name
+            if ($PhpVersion) {
+                Write-Log "  [WARNING] Specified PHP version '$PhpVersion' not found, using: $defaultPhpVersion" "WARNING"
+            } else {
+                Write-Log "  [INFO] Default PHP version: $defaultPhpVersion" "INFO"
+            }
+        }
     }
-
+    
     # Check MariaDB
     if (!(Test-Path "$isotonePath\mariadb\bin\mariadbd.exe") -and !(Test-Path "$isotonePath\mariadb\bin\mysqld.exe")) {
         Write-Log "  [MISSING] MariaDB - Component not found in mariadb folder" "ERROR"
@@ -137,7 +156,8 @@ try {
     function Replace-TemplateVariables {
         param(
             [string]$Content,
-            [string]$InstallPath
+            [string]$InstallPath,
+            [string]$PhpVersion = ""
         )
         
         # Convert to forward slashes for {{INSTALL_PATH}}
@@ -151,6 +171,11 @@ try {
         $Content = $Content -replace '{{INSTALL_PATH}}', $installPathFS
         $Content = $Content -replace '{{INSTALL_PATH_BS}}', $installPathBS
         $Content = $Content -replace '{{YEAR}}', $currentYear
+        
+        # Replace PHP version if provided
+        if ($PhpVersion) {
+            $Content = $Content -replace '{{PHP_VERSION}}', $PhpVersion
+        }
         
         # Also replace hardcoded paths
         $Content = $Content -replace 'C:/isotone', $installPathFS
@@ -203,6 +228,23 @@ phpinfo();
         Write-Log "  Created Apache log directory" "DEBUG"
     }
 
+    # Copy all extra config files from template
+    $extraTemplateDir = Join-Path $configPath "apache\extra"
+    $extraConfigDir = Join-Path $isotonePath "apache24\conf\extra"
+    if (Test-Path $extraTemplateDir) {
+        if (!(Test-Path $extraConfigDir)) {
+            New-Item -Path $extraConfigDir -ItemType Directory -Force | Out-Null
+        }
+        $extraFiles = Get-ChildItem -Path $extraTemplateDir -Filter "*.conf"
+        foreach ($file in $extraFiles) {
+            $content = Get-Content -Path $file.FullName -Raw
+            $content = Replace-TemplateVariables -Content $content -InstallPath $isotonePath
+            $targetFile = Join-Path $extraConfigDir $file.Name
+            Set-Content -Path $targetFile -Value $content -Encoding ASCII
+            Write-Log "  Copied $($file.Name) to conf/extra/" "DEBUG"
+        }
+    }
+
     $apacheTemplate = Join-Path $configPath "apache\httpd.conf"
     $apacheConfig = Join-Path $isotonePath "apache24\conf\httpd.conf"
 
@@ -218,11 +260,11 @@ phpinfo();
         
         # Read template and replace variables
         $content = Get-Content -Path $apacheTemplate -Raw
-        $content = Replace-TemplateVariables -Content $content -InstallPath $isotonePath
+        $content = Replace-TemplateVariables -Content $content -InstallPath $isotonePath -PhpVersion $defaultPhpVersion
         
         # Write configuration
         Set-Content -Path $apacheConfig -Value $content -Encoding UTF8
-        Write-Log "  [OK] Apache configuration applied from template" "SUCCESS"
+        Write-Log "  [OK] Apache configuration applied from template with PHP $defaultPhpVersion" "SUCCESS"
     } else {
         Write-Log "  [WARNING] httpd.conf not found in config\apache\" "WARNING"
         Write-Log "  Attempting basic configuration..." "DEBUG"
@@ -262,51 +304,71 @@ DirectoryIndex index.php index.html
         }
     }
 
-    # Step 3: Configure PHP
-    Write-Log "[3/7] Configuring PHP..." "YELLOW"
+    # Step 3: Configure PHP (all versions)
+    Write-Log "[3/7] Configuring PHP versions..." "YELLOW"
 
-    $phpTemplate = Join-Path $configPath "php\php.ini"
-    $phpConfig = Join-Path $isotonePath "php\php.ini"
+    # Get all PHP versions
+    $phpVersions = Get-ChildItem -Path "$isotonePath\php" -Directory -ErrorAction SilentlyContinue | 
+                   Where-Object { Test-Path (Join-Path $_.FullName "php.exe") }
 
-    if (Test-Path $phpTemplate) {
-        Write-Log "  Using php.ini from config folder..." "DEBUG"
+    if ($phpVersions.Count -gt 0) {
+        $phpTemplate = Join-Path $configPath "php\php.ini"
         
-        # Read template and replace variables
-        $content = Get-Content -Path $phpTemplate -Raw
-        $content = Replace-TemplateVariables -Content $content -InstallPath $isotonePath
-        
-        # Write configuration
-        Set-Content -Path $phpConfig -Value $content -Encoding UTF8
-        Write-Log "  [OK] PHP configuration applied from template" "SUCCESS"
-    } else {
-        Write-Log "  [WARNING] php.ini not found in config\php\" "WARNING"
-        
-        # Use development template if available
-        $phpDev = Join-Path $isotonePath "php\php.ini-development"
-        if (Test-Path $phpDev) {
-            Write-Log "  Using php.ini-development..." "DEBUG"
-            Copy-Item -Path $phpDev -Destination $phpConfig -Force
+        foreach ($phpVer in $phpVersions) {
+            Write-Log "  Configuring PHP $($phpVer.Name)..." "INFO"
+            $phpConfig = Join-Path $phpVer.FullName "php.ini"
             
-            # Enable common extensions
-            $content = Get-Content -Path $phpConfig -Raw
-            $content = $content -replace ';extension=curl', 'extension=curl'
-            $content = $content -replace ';extension=fileinfo', 'extension=fileinfo'
-            $content = $content -replace ';extension=gd', 'extension=gd'
-            $content = $content -replace ';extension=mbstring', 'extension=mbstring'
-            $content = $content -replace ';extension=mysqli', 'extension=mysqli'
-            $content = $content -replace ';extension=openssl', 'extension=openssl'
-            $content = $content -replace ';extension=pdo_mysql', 'extension=pdo_mysql'
-            $content = $content -replace ';extension=sodium', 'extension=sodium'
-            
-            # Set extension directory
-            $installPathBS = $isotonePath
-            $content = $content -replace '; extension_dir = "ext"', "extension_dir = `"$installPathBS\php\ext`""
-            
-            Set-Content -Path $phpConfig -Value $content -Encoding UTF8
-            Write-Log "  [OK] PHP configured with common extensions" "SUCCESS"
-        } else {
-            Write-Log "  [WARNING] No PHP configuration template available" "WARNING"
+            if (Test-Path $phpTemplate) {
+                Write-Log "    Using php.ini from config folder..." "DEBUG"
+                
+                # Read template and replace variables
+                $content = Get-Content -Path $phpTemplate -Raw
+                $content = Replace-TemplateVariables -Content $content -InstallPath $isotonePath
+                
+                # Replace version-specific paths
+                $versionPathBS = $phpVer.FullName
+                $content = $content -replace 'extension_dir = ".*?"', "extension_dir = `"$versionPathBS\ext`""
+                
+                # Write configuration
+                Set-Content -Path $phpConfig -Value $content -Encoding UTF8
+                Write-Log "    [OK] php.ini created for $($phpVer.Name)" "SUCCESS"
+            } else {
+                # Use development template if available
+                $phpDev = Join-Path $phpVer.FullName "php.ini-development"
+                if (Test-Path $phpDev -and !(Test-Path $phpConfig)) {
+                    Write-Log "    Using php.ini-development..." "DEBUG"
+                    Copy-Item -Path $phpDev -Destination $phpConfig -Force
+                    
+                    # Enable common extensions
+                    $content = Get-Content -Path $phpConfig -Raw
+                    $content = $content -replace ';extension=curl', 'extension=curl'
+                    $content = $content -replace ';extension=fileinfo', 'extension=fileinfo'
+                    $content = $content -replace ';extension=gd', 'extension=gd'
+                    $content = $content -replace ';extension=mbstring', 'extension=mbstring'
+                    $content = $content -replace ';extension=mysqli', 'extension=mysqli'
+                    $content = $content -replace ';extension=openssl', 'extension=openssl'
+                    $content = $content -replace ';extension=pdo_mysql', 'extension=pdo_mysql'
+                    $content = $content -replace ';extension=sodium', 'extension=sodium'
+                    $content = $content -replace ';extension=sqlite3', 'extension=sqlite3'
+                    $content = $content -replace ';extension=pdo_sqlite', 'extension=pdo_sqlite'
+                    
+                    # Set extension directory
+                    $versionPathBS = $phpVer.FullName
+                    $content = $content -replace '; extension_dir = "ext"', "extension_dir = `"$versionPathBS\ext`""
+                    
+                    Set-Content -Path $phpConfig -Value $content -Encoding UTF8
+                    Write-Log "    [OK] php.ini created with common extensions for $($phpVer.Name)" "SUCCESS"
+                } elseif (Test-Path $phpConfig) {
+                    Write-Log "    [OK] php.ini already exists for $($phpVer.Name)" "SUCCESS"
+                } else {
+                    Write-Log "    [WARNING] No php.ini template available for $($phpVer.Name)" "WARNING"
+                }
+            }
         }
+        
+        Write-Log "  [OK] All PHP versions configured" "SUCCESS"
+    } else {
+        Write-Log "  [WARNING] No PHP versions found to configure" "WARNING"
     }
 
     # Step 4: Configure MariaDB
@@ -534,138 +596,12 @@ Alias /phpmyadmin "$installPathFS/phpmyadmin"
         Write-Log "  Run phpmyadmin\Setup-phpMyAdmin-Storage.ps1 to configure storage tables" "YELLOW"
         Write-Log "  This enables advanced features like:" "DEBUG"
         Write-Log "    - Bookmarked queries" "DEBUG"
-        Write-Log "    - SQL history" "DEBUG"
-        Write-Log "    - Designer view" "DEBUG"
-        Write-Log "    - User preferences" "DEBUG"
-    }
-
-    # Step 6: Configure phpLiteAdmin
-    Write-Log "[6/7] Configuring phpLiteAdmin..." "YELLOW"
-    
-    # Check if phpLiteAdmin exists
-    $phpliteadminPath = Join-Path $isotonePath "phpliteadmin\phpliteadmin.php"
-    if (Test-Path $phpliteadminPath) {
-        Write-Log "  phpLiteAdmin found at: phpliteadmin\phpliteadmin.php" "DEBUG"
-        
-        # Create Apache alias for phpLiteAdmin
-        Write-Host ""
-        Write-Log "Creating phpLiteAdmin alias in Apache..." "CYAN"
-        $phpliteadminAlias = Join-Path $isotonePath "apache24\conf\extra\httpd-phpliteadmin.conf"
-        
-        if (!(Test-Path $phpliteadminAlias) -or $Force) {
-            $installPathFS = $isotonePath.Replace('\', '/')
-            $aliasContent = @"
-# phpLiteAdmin configuration for IsotoneStack
-# SQLite database management tool
-
-Alias /phpliteadmin "$installPathFS/phpliteadmin/"
-Alias /sqlite "$installPathFS/phpliteadmin/"
-
-<Directory "$installPathFS/phpliteadmin/">
-    Options Indexes FollowSymLinks
-    AllowOverride All
-    Require all granted
-    
-    # PHP settings for phpLiteAdmin
-    php_admin_value upload_max_filesize 128M
-    php_admin_value post_max_size 128M
-    php_admin_value max_execution_time 360
-    php_admin_value max_input_time 360
-    php_admin_value memory_limit 256M
-    
-    # Security headers
-    Header set X-Content-Type-Options "nosniff"
-    Header set X-Frame-Options "SAMEORIGIN"
-    Header set X-XSS-Protection "1; mode=block"
-    
-    # Directory index
-    DirectoryIndex phpliteadmin.php index.php
-</Directory>
-
-# Redirect /phpliteadmin (without trailing slash) to /phpliteadmin/
-RedirectMatch ^/phpliteadmin$ /phpliteadmin/
-RedirectMatch ^/sqlite$ /phpliteadmin/
-
-# Prevent access to configuration samples
-<FilesMatch "\.sample\.php$">
-    Require all denied
-</FilesMatch>
-"@
-            Set-Content -Path $phpliteadminAlias -Value $aliasContent -Encoding ASCII
-            Write-Log "  Created phpLiteAdmin alias configuration" "DEBUG"
-            
-            # Add include to httpd.conf if not already there
-            $apacheConfig = Join-Path $isotonePath "apache24\conf\httpd.conf"
-            $configContent = Get-Content -Path $apacheConfig -Raw
-            
-            if ($configContent -notmatch "httpd-phpliteadmin\.conf") {
-                Add-Content -Path $apacheConfig -Value "Include conf/extra/httpd-phpliteadmin.conf"
-                Write-Log "  Added phpLiteAdmin include to httpd.conf" "DEBUG"
-            }
-            
-            Write-Log "  [OK] phpLiteAdmin alias created" "SUCCESS"
-        } else {
-            Write-Log "  [OK] phpLiteAdmin alias already exists" "SUCCESS"
-        }
-        
-        # Create phpLiteAdmin configuration if it doesn't exist
-        $phpliteadminConfig = Join-Path $isotonePath "phpliteadmin\phpliteadmin.config.php"
-        if (!(Test-Path $phpliteadminConfig)) {
-            $sqlitePath = Join-Path $isotonePath "sqlite"
-            $sqlitePathFS = $sqlitePath.Replace('\', '/')
-            $configContent = @"
-<?php
-// phpLiteAdmin configuration for IsotoneStack
-// Generated by Configure-IsotoneStack.ps1
-
-// Password for phpLiteAdmin (default: admin)
-// IMPORTANT: Change this password for security!
-`$password = 'admin';
-
-// Directory where SQLite databases are stored
-`$directory = '$sqlitePathFS';
-
-// Theme (options: Default, AlternateBlue, Modern, etc.)
-`$theme = 'Default';
-
-// Language
-`$language = 'en';
-
-// Number of rows to display by default
-`$rowsNum = 30;
-
-// Maximum file size for imports (in bytes)
-`$maxSavedChars = 100000;
-
-// Enable debugging
-`$debug = false;
-
-// Custom functions
-`$custom_functions = array(
-    'md5', 'sha1', 'sha256', 
-    'strtoupper', 'strtolower', 
-    'ucfirst', 'lcfirst'
-);
-
-// Supported SQLite extensions
-`$allowed_extensions = array('db', 'db3', 'sqlite', 'sqlite3');
-?>
-"@
-            Set-Content -Path $phpliteadminConfig -Value $configContent -Encoding ASCII
-            Write-Log "  Created phpLiteAdmin configuration file" "DEBUG"
-            Write-Log "  [WARNING] Default password is 'admin' - please change it!" "WARNING"
-        } else {
-            Write-Log "  phpLiteAdmin configuration already exists" "DEBUG"
-        }
-        
-        Write-Log "  [OK] phpLiteAdmin configuration complete" "SUCCESS"
-    } else {
         Write-Log "  [INFO] phpLiteAdmin not found - skipping configuration" "INFO"
         Write-Log "  To add phpLiteAdmin later, download from phpliteadmin.org" "DEBUG"
     }
 
     # Step 7: Configure SQLite
-    Write-Log "[7/7] Configuring SQLite..." "YELLOW"
+    Write-Log "[7/8] Configuring SQLite..." "YELLOW"
     
     # Create SQLite directory
     $sqlitePath = Join-Path $isotonePath "sqlite"
@@ -703,7 +639,6 @@ RedirectMatch ^/sqlite$ /phpliteadmin/
     # Create sample SQLite database
     $sampleDb = Join-Path $sqlitePath "isotone.db"
     if (!(Test-Path $sampleDb)) {
-        Write-Log "  Sample SQLite database will be created on first access" "INFO"
     } else {
         Write-Log "  SQLite database already exists: isotone.db" "DEBUG"
     }
@@ -711,6 +646,36 @@ RedirectMatch ^/sqlite$ /phpliteadmin/
     Write-Log "  [OK] SQLite configuration complete" "SUCCESS"
     Write-Log "  SQLite databases stored in: sqlite\" "INFO"
     Write-Log "  Access SQLite via: http://localhost/sqlite" "INFO"
+
+    # Step 8: Create iso-control configuration
+    Write-Log "[8/8] Creating iso-control configuration..." "YELLOW"
+    
+    $isoControlConfigPath = Join-Path $isotonePath "iso-control\config.json"
+    $isoControlDir = Join-Path $isotonePath "iso-control"
+    
+    if (!(Test-Path $isoControlDir)) {
+        New-Item -Path $isoControlDir -ItemType Directory -Force | Out-Null
+        Write-Log "  Created iso-control directory" "DEBUG"
+    }
+    
+    # Only create config if it doesn't exist (don't overwrite user settings)
+    if (!(Test-Path $isoControlConfigPath)) {
+        Write-Log "  Creating default configuration..." "DEBUG"
+        
+        $config = @{
+            IsotonePath = $isotonePath
+            AutoStartServices = $false
+            MinimizeToTray = $false
+            AutoCheckUpdates = $true
+            SelectedPhpVersion = $defaultPhpVersion
+            EnabledPhpExtensions = @()
+        }
+        
+        $config | ConvertTo-Json | Set-Content -Path $isoControlConfigPath -Encoding UTF8
+        Write-Log "  [OK] Created config.json with default PHP version: $defaultPhpVersion" "SUCCESS"
+    } else {
+        Write-Log "  [OK] config.json already exists (preserving user settings)" "SUCCESS"
+    }
 
     # Summary
     Write-Host ""
@@ -720,7 +685,8 @@ RedirectMatch ^/sqlite$ /phpliteadmin/
     Write-Host ""
     Write-Log "Configuration files:" "CYAN"
     Write-Log "  Apache:       apache24\conf\httpd.conf" "DEBUG"
-    Write-Log "  PHP:          php\php.ini" "DEBUG"
+    Write-Log "  PHP:          php\<version>\php.ini (multi-version)" "DEBUG"
+    Write-Log "  Default PHP:  $defaultPhpVersion" "INFO"
     Write-Log "  MariaDB:      mariadb\my.ini" "DEBUG"
     Write-Log "  phpMyAdmin:   phpmyadmin\config.inc.php" "DEBUG"
     Write-Log "  phpLiteAdmin: phpliteadmin\phpliteadmin.config.php" "DEBUG"

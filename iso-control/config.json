@@ -1,0 +1,8 @@
+{
+  "MinimizeToTray": false,
+  "EnabledPhpExtensions": [],
+  "AutoStartServices": false,
+  "IsotonePath": "R:\\isotone",
+  "AutoCheckUpdates": true,
+  "SelectedPhpVersion": "8.5.0"
+}
