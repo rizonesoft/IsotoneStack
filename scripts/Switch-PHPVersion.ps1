@@ -89,11 +89,17 @@ try {
     $content = Get-Content -Path $httpdConf -Raw
     $installPathFS = $isotonePath.Replace('\', '/')
 
-    # Update PHP module path and PHPIniDir
+    # Update PHP module path, dependency LoadFile, and PHPIniDir
+    $phpLoadFileLine = "LoadFile `"$installPathFS/php/$Version/libsodium.dll`""
     $phpModuleLine = "LoadModule php_module `"$installPathFS/php/$Version/php8apache2_4.dll`""
     $phpIniDirLine = "PHPIniDir `"$installPathFS/php/$Version`""
 
     # Replace existing PHP configuration
+    if ($content -match 'LoadFile "[^"]*/libsodium\.dll"') {
+        $content = $content -replace 'LoadFile "[^"]*/libsodium\.dll"', $phpLoadFileLine
+    } elseif ($content -match 'LoadModule php_module') {
+        $content = $content -replace '(LoadModule php_module "[^"]*php8apache2_4\.dll")', "$phpLoadFileLine`r`n$1"
+    }
     $content = $content -replace 'LoadModule php_module ".*?php8apache2_4\.dll"', $phpModuleLine
     $content = $content -replace 'PHPIniDir ".*?"', $phpIniDirLine
 
@@ -107,6 +113,7 @@ try {
             $phpConfig = @"
 
 # PHP $Version Configuration
+$phpLoadFileLine
 $phpModuleLine
 AddHandler application/x-httpd-php .php
 $phpIniDirLine

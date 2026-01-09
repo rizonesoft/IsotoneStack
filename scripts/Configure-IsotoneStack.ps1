@@ -290,9 +290,9 @@ phpinfo();
                 $phpConfig = @"
 
 # PHP Configuration
-LoadModule php_module "$installPathFS/php/php8apache2_4.dll"
+LoadModule php_module "$installPathFS/php/$defaultPhpVersion/php8apache2_4.dll"
 AddHandler application/x-httpd-php .php
-PHPIniDir "$installPathFS/php"
+PHPIniDir "$installPathFS/php/$defaultPhpVersion"
 DirectoryIndex index.php index.html
 "@
                 $content += $phpConfig
