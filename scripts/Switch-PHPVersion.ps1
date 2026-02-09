@@ -2,7 +2,7 @@
 # Switches the active PHP version and restarts Apache
 
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$Version,
     [switch]$NoRestart
 )
@@ -37,10 +37,10 @@ function Write-Log {
     
     # Also write to console
     switch ($Level) {
-        "ERROR"   { Write-Host $Message -ForegroundColor Red }
+        "ERROR" { Write-Host $Message -ForegroundColor Red }
         "WARNING" { Write-Host $Message -ForegroundColor Yellow }
         "SUCCESS" { Write-Host $Message -ForegroundColor Green }
-        default   { Write-Host $Message }
+        default { Write-Host $Message }
     }
 }
 
@@ -91,14 +91,19 @@ try {
 
     # Update PHP module path, dependency LoadFile, and PHPIniDir
     $phpLoadFileLine = "LoadFile `"$installPathFS/php/$Version/libsodium.dll`""
+    $phpLoadFileSsh2Line = "LoadFile `"$installPathFS/php/$Version/libssh2.dll`""
     $phpModuleLine = "LoadModule php_module `"$installPathFS/php/$Version/php8apache2_4.dll`""
     $phpIniDirLine = "PHPIniDir `"$installPathFS/php/$Version`""
 
     # Replace existing PHP configuration
     if ($content -match 'LoadFile "[^"]*/libsodium\.dll"') {
         $content = $content -replace 'LoadFile "[^"]*/libsodium\.dll"', $phpLoadFileLine
-    } elseif ($content -match 'LoadModule php_module') {
+    }
+    elseif ($content -match 'LoadModule php_module') {
         $content = $content -replace '(LoadModule php_module "[^"]*php8apache2_4\.dll")', "$phpLoadFileLine`r`n$1"
+    }
+    if ($content -match 'LoadFile "[^"]*/libssh2\.dll"') {
+        $content = $content -replace 'LoadFile "[^"]*/libssh2\.dll"', $phpLoadFileSsh2Line
     }
     $content = $content -replace 'LoadModule php_module ".*?php8apache2_4\.dll"', $phpModuleLine
     $content = $content -replace 'PHPIniDir ".*?"', $phpIniDirLine
@@ -114,6 +119,7 @@ try {
 
 # PHP $Version Configuration
 $phpLoadFileLine
+$phpLoadFileSsh2Line
 $phpModuleLine
 AddHandler application/x-httpd-php .php
 $phpIniDirLine
@@ -160,14 +166,17 @@ DirectoryIndex index.php index.html
                 Start-Service -Name $serviceName
                 Start-Sleep -Seconds 2
                 Write-Log "[OK] Apache started with PHP $Version" "SUCCESS"
-            } else {
+            }
+            else {
                 Write-Log "[INFO] Apache is not running - no restart needed" "INFO"
             }
-        } else {
+        }
+        else {
             Write-Log "[WARNING] Apache service not found - please restart manually" "WARNING"
             Write-Log "You can start Apache using Start-Services.ps1" "INFO"
         }
-    } else {
+    }
+    else {
         Write-Log "[INFO] Restart skipped - please restart Apache manually" "INFO"
     }
 
@@ -178,7 +187,8 @@ DirectoryIndex index.php index.html
     Write-Log "Log file: $logFile" "INFO"
     Write-Log "========================================" "INFO"
     
-} catch {
+}
+catch {
     Write-Log "FATAL ERROR: $_" "ERROR"
     Write-Log "Stack Trace: $($_.ScriptStackTrace)" "ERROR"
     Write-Host ""
