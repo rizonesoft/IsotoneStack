@@ -59,6 +59,10 @@
 !/www/demo/
 !/www/default/
 
+# Nested repositories (independent Git repos)
+/www/cadence/
+/www/securebin/
+
 # =====================================
 # Visual Studio / C# .NET
 # =====================================
